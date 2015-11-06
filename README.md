@@ -1,6 +1,6 @@
 # AuthenticServer #
 
-This is the server component of Authentic. This provides endpoints for signup, login, confirm, and password change.
+This is the server component of [authentic](https://github.com/davidguttman/authentic). This provides endpoints for signup, login, confirm, and password change.
 
 ## Example ##
 
@@ -37,7 +37,7 @@ console.log('Authentic enabled server listening on port', 1337)
 
 ### Authentic(opts) ###
 
-This is the main entry poin. Accepts an options object and returns a handler function.
+This is the main entry point. Accepts an options object and returns a handler function.
 
 ```js
 var auth = Authentic({
