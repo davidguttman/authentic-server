@@ -32,7 +32,7 @@ module.exports = function (opts) {
 
     function onError (err) {
       if (!err) return
-      if (err.statusCode === 404) return next(req, res)
+      if (next && err.statusCode === 404) return next(req, res)
 
       res.writeHead(err.statusCode || 500, {'Content-Type': 'application/json'})
       res.end(JSON.stringify({

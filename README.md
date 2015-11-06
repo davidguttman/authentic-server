@@ -33,7 +33,60 @@ console.log('Authentic enabled server listening on port', 1337)
 
 ```
 
-## API ##
+## Module API ##
+
+### Authentic(opts) ###
+
+This is the main entry poin. Accepts an options object and returns a handler function.
+
+```js
+var auth = Authentic({
+  db: __dirname + '/users/',
+  privateKey: fs.readFileSync(__dirname + '/rsa-private.pem'),
+  publicKey: fs.readFileSync(__dirname + '/rsa-public.pem'),
+  sendEmail: function (emailOpts, done) {
+    console.log(email)
+    setImmediate(done)
+  }
+})
+
+// auth is now a function that accepts req and res arguments
+var server = http.createServer(function(req, res){
+  auth(req, res)
+})
+
+// or simply
+var server = http.createServer(auth)
+```
+
+#### options ####
+
+`Authentic()` takes an options object as its first argument, several of them are required:
+
+* `db`: either a `levelDB` compatible db instance OR a string location of one on disk (will create one if it doesn't exist)
+* `privateKey`: RSA private key in PEM format. Can be created with the command: `openssl genrsa 4096 > rsa-private.pem`
+* `publicKey`: RSA public key in PEM format. Can be created with the command: `openssl rsa -in rsa-private.pem -pubout > rsa-public.pem`
+* `sendEmail(emailOpts, done)`: a function that sends email. Use the provided `emailOpts` to create and send  email and call `done(err)` when finished. If `err` is null or undefined, `authentic-server` will treat it as a success. `emailOpts` will come in one of two flavors depending on if it's a signup or a change password request:
+
+```js
+{ type: 'signup',
+  email: 'david@scalehaus.io',
+  confirmUrl: 'https://scalehaus.io/confirm?confirmToken=9a1dccd9f...' }
+```
+
+OR
+
+```js
+{ type: 'change-password-request',
+  email: 'david@scalehaus.io',
+  changeUrl: 'https://scalehaus.io/change-password?changeToken=0b4fa5904752b...' }
+```
+
+Optional:
+
+* `prefix`: defaults to `/auth`. This is the path prefix for all `authentic-server` API endpoints. For example if you set prefix to `/awesome`, the endpoints will be `/awesome/signup`, `/awesome/login`, `/awesome/confirm`, etc...
+
+## Server API ##
 
 ### POST `/auth/signup`
 
@@ -159,3 +212,7 @@ Responds with the server's public key. This is what allows your other services t
     }
 }
 ```
+
+# License #
+
+MIT
