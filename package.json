@@ -25,5 +25,17 @@
     "level-mem": "^0.18.0",
     "servertest": "^1.2.1",
     "tape": "^4.2.2"
-  }
+  },
+  "directories": {
+    "example": "example",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidguttman/authentic-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/davidguttman/authentic-server/issues"
+  },
+  "homepage": "https://github.com/davidguttman/authentic-server#readme"
 }
