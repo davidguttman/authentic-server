@@ -66,7 +66,8 @@ API.prototype.signup = function (req, res, opts, cb) {
       var emailOpts = {
         type: 'signup',
         email: email,
-        confirmUrl: confirmUrl
+        confirmUrl: confirmUrl,
+        confirmToken: user.data.confirmToken
       }
 
       self.sendEmail(emailOpts, function (err) {
