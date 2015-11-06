@@ -32,7 +32,7 @@ API.prototype.publicKey = function (req, res, opts, cb) {
   res.end(JSON.stringify({
     success: true,
     data: {
-      publicKey: Tokens.publicKey
+      publicKey: this.Tokens.publicKey
     }
   }))
 }

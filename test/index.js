@@ -27,6 +27,21 @@ var auth = Authentic({
   }
 })
 
+tape('Auth: should get public-key', function (t) {
+  var url = '/auth/public-key'
+  var opts = { method: 'GET' }
+
+  servertest(createServer(auth), url, opts, function (err, res) {
+    t.ifError(err, 'should not error')
+    var data = JSON.parse(res.body)
+
+    t.equal(data.success, true, 'should succeed')
+    t.equal(data.data.publicKey.length, 800, 'should have publicKey')
+
+    t.end()
+  })
+})
+
 tape('Auth: Signup: should be able to sign up', function (t) {
   var postData = {email: 'david@scalehaus.io', password: 'swordfish', confirmUrl: 'http://example.com/confirm'}
 
