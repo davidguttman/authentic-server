@@ -85,6 +85,7 @@ OR
 Optional:
 
 * `prefix`: defaults to `/auth`. This is the path prefix for all `authentic-server` API endpoints. For example if you set prefix to `/awesome`, the endpoints will be `/awesome/signup`, `/awesome/login`, `/awesome/confirm`, etc...
+* `expiresIn`: defaults to `"30d"`. This is how long it takes before the token expires. Expressed in seconds or a string describing a time span [rauchg/ms](https://github.com/rauchg/ms.js). Eg: `60`, `"2 days"`, `"10h"`, `"7d"`
 
 ## Server API ##
 

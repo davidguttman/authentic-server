@@ -5,13 +5,13 @@ var Tokens = module.exports = function (opts) {
 
   this.publicKey = opts.publicKey.toString()
   this.privateKey = opts.privateKey.toString()
-  this.expireTime = opts.expireTime || '30d'
+  this.expiresIn = opts.expiresIn || '30d'
 
   return this
 }
 
 Tokens.prototype.encode = function (email) {
-  var payload = {email: email, expiresIn: this.expireTime}
+  var payload = {email: email, expiresIn: this.expiresIn}
   var token = jwt.sign(payload, this.privateKey, {algorithm: 'RS256'})
   return token
 }
