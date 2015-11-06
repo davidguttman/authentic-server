@@ -16,12 +16,12 @@ module.exports = function (opts) {
   var api = API(opts)
 
   var router = HttpHashRouter()
-  router.set(routePrefix + '/login', {POST: api.login})
-  router.set(routePrefix + '/signup', {POST: api.signup})
-  router.set(routePrefix + '/confirm', {POST: api.confirm})
-  router.set(routePrefix + '/change-password-request', {POST: api.changePasswordRequest})
-  router.set(routePrefix + '/change-password', {POST: api.changePassword})
-  router.set(routePrefix + '/public-key', {GET: api.publicKey})
+  router.set(routePrefix + '/login', {POST: api.login.bind(api)})
+  router.set(routePrefix + '/signup', {POST: api.signup.bind(api)})
+  router.set(routePrefix + '/confirm', {POST: api.confirm.bind(api)})
+  router.set(routePrefix + '/change-password-request', {POST: api.changePasswordRequest.bind(api)})
+  router.set(routePrefix + '/change-password', {POST: api.changePassword.bind(api)})
+  router.set(routePrefix + '/public-key', {GET: api.publicKey.bind(api)})
 
   function handler (req, res, next) {
     Corsify({
