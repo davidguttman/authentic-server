@@ -4,7 +4,7 @@
   "description": "This is the server component of Authentic. This provides endpoints for signup, login, confirm, and password change.",
   "main": "index.js",
   "scripts": {
-    "test": "node test/index.js"
+    "test": "node test/index.js && standard"
   },
   "keywords": [
     "authentic",
@@ -24,6 +24,7 @@
     "bl": "^1.0.0",
     "level-mem": "^0.18.0",
     "servertest": "^1.2.1",
+    "standard": "^5.3.1",
     "tape": "^4.2.2"
   },
   "directories": {

@@ -1,4 +1,3 @@
-var fs = require('fs')
 var URL = require('url')
 var jsonBody = require('body/json')
 
@@ -6,16 +5,16 @@ var Tokens = require('./tokens')
 var Users = require('./users')
 
 var clientErrors = {
-  'User Exists':             400,
+  'User Exists': 400,
   'ConfirmUrl Not Provided': 400,
-  'ChangeUrl Not Provided':  400,
-  'Invalid Email':           400,
-  'Invalid Password':        400,
-  'Token Mismatch':          401,
-  'Already Confirmed':       400,
-  'Password Mismatch':       401,
-  'User Not Found':          401,
-  'Token Expired':           400
+  'ChangeUrl Not Provided': 400,
+  'Invalid Email': 400,
+  'Invalid Password': 400,
+  'Token Mismatch': 401,
+  'Already Confirmed': 400,
+  'Password Mismatch': 401,
+  'User Not Found': 401,
+  'Token Expired': 400
 }
 
 var API = module.exports = function (opts) {
@@ -48,7 +47,7 @@ API.prototype.signup = function (req, res, opts, cb) {
     var confirmUrl = userData.confirmUrl
 
     if (!confirmUrl) {
-      var err = new Error('ConfirmUrl Not Provided')
+      err = new Error('ConfirmUrl Not Provided')
       err.statusCode = clientErrors[err.message] || 500
       return cb(err)
     }
@@ -96,7 +95,7 @@ API.prototype.confirm = function (req, res, opts, cb) {
     var email = userData.email
     var confirmToken = userData.confirmToken
 
-    self.Users.confirmUser(email, confirmToken, function(err) {
+    self.Users.confirmUser(email, confirmToken, function (err) {
       if (err) {
         err.statusCode = clientErrors[err.message] || 500
         return cb(err)
@@ -153,7 +152,7 @@ API.prototype.changePasswordRequest = function (req, res, opts, cb) {
     var changeUrl = userData.changeUrl
 
     if (!changeUrl) {
-      var err = new Error('ChangeUrl Not Provided')
+      err = new Error('ChangeUrl Not Provided')
       err.statusCode = clientErrors[err.message] || 500
       return cb(err)
     }
@@ -182,7 +181,6 @@ API.prototype.changePasswordRequest = function (req, res, opts, cb) {
         }))
       })
     })
-
   })
 }
 
@@ -217,6 +215,5 @@ API.prototype.changePassword = function (req, res, opts, cb) {
         }))
       })
     })
-
   })
 }

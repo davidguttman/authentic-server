@@ -1,13 +1,10 @@
 var fs = require('fs')
-var bl = require('bl')
 var tape = require('tape')
 var level = require('level-mem')
 var servertest = require('servertest')
 
 var createServer = require('./server')
 var Authentic = require('../')
-
-var lastEmail = null
 
 var db = level('mem', {valueEncoding: 'json'})
 var Users = require('../users')(db)
@@ -21,10 +18,7 @@ var auth = Authentic({
   db: db,
   publicKey: publicKey,
   privateKey: privateKey,
-  sendEmail: function (email, cb) {
-    lastEmail = email
-    setImmediate(cb)
-  }
+  sendEmail: function (email, cb) { setImmediate(cb) }
 })
 
 tape('Auth: should get public-key', function (t) {
@@ -218,7 +212,6 @@ tape('Auth: Change Password Request', function (t) {
 
       t.end()
     })
-
   })
 })
 
@@ -259,12 +252,10 @@ tape('Auth: Change Password Request: will create confirmed user', function (t) {
 
       t.end()
     })
-
   })
 })
 
 tape('Auth: Change Password: should error with wrong token', function (t) {
-
   var postData = {
     email: 'david@scalehaus.io',
     changeToken: 'wrong token',
@@ -279,11 +270,10 @@ tape('Auth: Change Password: should error with wrong token', function (t) {
     var data = JSON.parse(res.body)
     t.equal(data.success, false, 'should not succeed')
     t.equal(data.error, 'Token Mismatch', 'should have error')
-    t.notOk((data.data||{}).authToken, 'should not have token')
+    t.notOk((data.data || {}).authToken, 'should not have token')
 
     t.end()
   })
-
 })
 
 tape('Auth: Change Password: should change password and login', function (t) {
@@ -312,7 +302,6 @@ tape('Auth: Change Password: should change password and login', function (t) {
 })
 
 tape('Auth: Change Password: should error with expired token', function (t) {
-
   var postData = {
     email: 'david@scalehaus.io',
     changeToken: 'expired token',
@@ -327,11 +316,10 @@ tape('Auth: Change Password: should error with expired token', function (t) {
     var data = JSON.parse(res.body)
     t.equal(data.success, false, 'should not succeed')
     t.equal(data.error, 'Token Expired', 'should have error')
-    t.notOk((data.data||{}).authToken, 'should not have token')
+    t.notOk((data.data || {}).authToken, 'should not have token')
 
     t.end()
   })
-
 })
 
 function post (url, data, cb) {

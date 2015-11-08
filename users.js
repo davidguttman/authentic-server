@@ -44,9 +44,11 @@ Users.prototype.createUser = function (email, password, cb) {
   var self = this
 
   this.findUser(email, function (err, user) {
-    if (user) return cb(new Error('User Exists'))
+    if (!err && user) return cb(new Error('User Exists'))
 
     generateToken(30, function (err, token) {
+      if (err) return cb(err)
+
       var data = {emailConfirmed: false, confirmToken: token}
 
       self.db.addUser(email, password, data, function (err) {
@@ -74,13 +76,13 @@ Users.prototype.confirmUser = function (email, token, cb) {
   })
 }
 
-Users.prototype.changePassword = function(email, password, token, cb) {
+Users.prototype.changePassword = function (email, password, token, cb) {
   if (!token) return cb(new Error('Invalid Token'))
   if (!validPassword(password)) return cb(new Error('Invalid Password'))
 
   var self = this
 
-  this.findUser(email, function(err, user) {
+  this.findUser(email, function (err, user) {
     if (err) return cb(err)
 
     if (!user.data.changeToken) return cb(new Error('Token Expired'))
@@ -91,7 +93,7 @@ Users.prototype.changePassword = function(email, password, token, cb) {
       return cb(new Error('Token Expired'))
     }
 
-    self.db.changePassword(email, password, function(err) {
+    self.db.changePassword(email, password, function (err) {
       if (err) return cb(err)
 
       user.data.changeToken = undefined
@@ -103,7 +105,7 @@ Users.prototype.changePassword = function(email, password, token, cb) {
   })
 }
 
-Users.prototype.createChangeToken = function(email, expires, cb) {
+Users.prototype.createChangeToken = function (email, expires, cb) {
   var self = this
 
   if (typeof expires === 'function') {
@@ -111,22 +113,23 @@ Users.prototype.createChangeToken = function(email, expires, cb) {
     expires = Date.now() + 2 * 24 * 3600 * 1000
   }
 
-  this.findUser(email, function(err, user) {
+  this.findUser(email, function (err, user) {
     if (err) {
-      if (err.message == 'User Not Found') {
+      if (err.message === 'User Not Found') {
         // Create user and try again
         return self.createWithPasswordChange(email, expires, cb)
       }
       return cb(err)
     }
 
-    generateToken(30, function(err, token) {
+    generateToken(30, function (err, token) {
+      if (err) return cb(err)
       if (user.data == null) user.data = {}
 
       user.data.changeToken = token
       user.data.changeExpires = expires
 
-      self.db.modifyUser(email, user.data, function(err) {
+      self.db.modifyUser(email, user.data, function (err) {
         if (err) return cb(err)
 
         cb(null, token)
@@ -135,7 +138,7 @@ Users.prototype.createChangeToken = function(email, expires, cb) {
   })
 }
 
-Users.prototype.createWithPasswordChange = function(email, expires, cb) {
+Users.prototype.createWithPasswordChange = function (email, expires, cb) {
   var self = this
 
   if (typeof expires === 'function') {
@@ -143,12 +146,12 @@ Users.prototype.createWithPasswordChange = function(email, expires, cb) {
     expires = Date.now() + 90 * 24 * 3600 * 1000
   }
 
-  generateToken(16, function(err, pw) {
-
-    self.createUser(email, pw, function(err, user) {
+  generateToken(16, function (err, pw) {
+    if (err) return cb(err)
+    self.createUser(email, pw, function (err, user) {
       if (err) return cb(err)
 
-      self.confirmUser(email, user.data.confirmToken, function(err) {
+      self.confirmUser(email, user.data.confirmToken, function (err) {
         if (err) return cb(err)
 
         self.createChangeToken(email, expires, cb)

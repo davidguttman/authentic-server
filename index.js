@@ -6,11 +6,6 @@ var API = require('./api')
 module.exports = function (opts) {
   checkInitErrors(opts)
 
-  var db = opts.db
-  var publicKey = opts.publicKey
-  var privateKey = opts.privateKey
-  var sendEmail = opts.sendEmail
-
   var routePrefix = opts.routePrefix || '/auth'
 
   var api = API(opts)
@@ -25,7 +20,7 @@ module.exports = function (opts) {
 
   function handler (req, res, next) {
     Corsify({
-      "Access-Control-Allow-Headers": 'authorization, accept, content-type'
+      'Access-Control-Allow-Headers': 'authorization, accept, content-type'
     }, function (req, res) {
       router(req, res, {}, onError)
     })(req, res)
