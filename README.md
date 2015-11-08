@@ -63,7 +63,12 @@ var server = http.createServer(auth)
 
 `Authentic()` takes an options object as its first argument, several of them are required:
 
-* `db`: either a `levelDB` compatible db instance OR a string location of one on disk (will create one if it doesn't exist)
+* `db`: any of the following:
+  * a string location of where to open (or create if it doesn't exist) a [levelDB](https://github.com/level/level) on disk
+  * an object that has `get` and `put` methods that follow this form (see [test/fake-db.js](https://github.com/davidguttman/authentic-server/blob/master/test/fake-db.js) for an example):
+    * `get: function (key, cb) { ... }`
+    * `put: function (key, value, cb) { ... }`
+  * a `levelDB` compatible db instance (e.g. [multileveldown](https://github.com/mafintosh/multileveldown) or [levelup](https://github.com/level/levelup) + [sqldown](https://github.com/calvinmetcalf/sqldown), [dynamodown](https://github.com/davidguttman/dynamodown), [redisdown](https://github.com/hmalphettes/redisdown), etc... )
 * `privateKey`: RSA private key in PEM format. Can be created with the command: `openssl genrsa 4096 > rsa-private.pem`
 * `publicKey`: RSA public key in PEM format. Can be created with the command: `openssl rsa -in rsa-private.pem -pubout > rsa-public.pem`
 * `sendEmail(emailOpts, done)`: a function that sends email. Use the provided `emailOpts` to create and send  email and call `done(err)` when finished. If `err` is null or undefined, `authentic-server` will treat it as a success. `emailOpts` will come in one of two flavors depending on if it's a signup or a change password request:
