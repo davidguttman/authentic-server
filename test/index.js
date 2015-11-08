@@ -1,12 +1,11 @@
 var fs = require('fs')
 var tape = require('tape')
-var level = require('level-mem')
 var servertest = require('servertest')
 
 var createServer = require('./server')
 var Authentic = require('../')
 
-var db = level('mem', {valueEncoding: 'json'})
+var db = require('./fake-db')
 var Users = require('../users')(db)
 
 var publicKey = fs.readFileSync(__dirname + '/rsa-public.pem')

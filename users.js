@@ -4,9 +4,30 @@ var ulevel = require('ix-level-userdb')
 var Users = module.exports = function (db) {
   if (!(this instanceof Users)) return new Users(db)
 
-  this.db = ulevel(db)
+  this.db = ulevel(this.adaptDB(db))
 
   return this
+}
+
+Users.prototype.adaptDB = function (dbObj) {
+  return {
+    get: function (keys, cb) {
+      var key = keys[1]
+      dbObj.get(key, function (err, val) {
+        if (err) return cb(err)
+        if (val === undefined) {
+          err = new Error('Key not found in database [' + key + ']')
+          err.notFound = true
+          err.status = 404
+        }
+        cb(err, val)
+      })
+    },
+    put: function (keys, val, cb) {
+      var key = keys[1]
+      dbObj.put(key, val, cb)
+    }
+  }
 }
 
 Users.prototype.findUser = function (email, cb) {
