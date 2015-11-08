@@ -19,14 +19,7 @@ var auth = Authentic({
   }
 })
 
-var server = http.createServer(function (req, res) {
-  auth(req, res, next)
-
-  function next (req, res) {
-    // not an authentic route, send 404 or send to another route
-    res.end('Not an authentic route =)')
-  }
-})
+var server = http.createServer(auth)
 
 server.listen(1337)
 console.log('Authentic enabled server listening on port', 1337)
@@ -50,9 +43,15 @@ var auth = Authentic({
   }
 })
 
-// auth is now a function that accepts req and res arguments
-var server = http.createServer(function(req, res){
-  auth(req, res)
+// auth is now a function that accepts req, res, and optional next arguments
+var server = http.createServer(function(req, res, next){
+  auth(req, res, next)
+
+  function next (req, res) {
+    // authentic-server will call next if none of its routes match
+    // useful if you want to have other routes on the server
+    res.end('Not an authentic route')
+  }
 })
 
 // or simply
