@@ -4,7 +4,8 @@ var ulevel = require('ix-level-userdb')
 var Users = module.exports = function (db) {
   if (!(this instanceof Users)) return new Users(db)
 
-  this.db = ulevel(this.adaptDB(db))
+  var adapted = typeof db === 'string' ? db : this.adaptDB(db)
+  this.db = ulevel(adapted)
 
   return this
 }
