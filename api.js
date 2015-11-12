@@ -60,6 +60,7 @@ API.prototype.signup = function (req, res, opts, cb) {
 
       var urlObj = URL.parse(confirmUrl, true)
       urlObj.query.confirmToken = user.data.confirmToken
+      urlObj.query.email = email
       confirmUrl = URL.format(urlObj)
 
       var emailOpts = {
@@ -162,6 +163,7 @@ API.prototype.changePasswordRequest = function (req, res, opts, cb) {
 
       var urlObj = URL.parse(changeUrl, true)
       urlObj.query.changeToken = changeToken
+      urlObj.query.email = email
       changeUrl = URL.format(urlObj)
 
       var emailOpts = {
