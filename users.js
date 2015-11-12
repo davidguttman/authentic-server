@@ -1,10 +1,11 @@
 var crypto = require('crypto')
 var ulevel = require('ix-level-userdb')
+var level = require('level')
 
 var Users = module.exports = function (db) {
   if (!(this instanceof Users)) return new Users(db)
 
-  var adapted = typeof db === 'string' ? db : this.adaptDB(db)
+  var adapted = typeof db === 'string' ? createLevelDB(db) : this.adaptDB(db)
   this.db = ulevel(adapted)
 
   return this
@@ -13,7 +14,7 @@ var Users = module.exports = function (db) {
 Users.prototype.adaptDB = function (dbObj) {
   return {
     get: function (keys, cb) {
-      var key = keys[1]
+      var key = keys.split('user:')[1]
       dbObj.get(key, function (err, val) {
         if (err) return cb(err)
         if (val === undefined) {
@@ -25,7 +26,7 @@ Users.prototype.adaptDB = function (dbObj) {
       })
     },
     put: function (keys, val, cb) {
-      var key = keys[1]
+      var key = keys.split('user:')[1]
       dbObj.put(key, val, cb)
     }
   }
@@ -203,4 +204,8 @@ function validEmail (email) {
 function validPassword (password) {
   password = password || ''
   return password.length >= 6
+}
+
+function createLevelDB (location) {
+  return level(location, {valueEncoding: 'json'})
 }
