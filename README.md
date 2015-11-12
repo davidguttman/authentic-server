@@ -26,6 +26,12 @@ console.log('Authentic enabled server listening on port', 1337)
 
 ```
 
+## Installation ##
+
+```
+npm install --save authentic-server
+```
+
 ## Module API ##
 
 ### Authentic(opts) ###
