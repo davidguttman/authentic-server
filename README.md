@@ -14,6 +14,7 @@ var auth = Authentic({
   publicKey: fs.readFileSync(__dirname + '/rsa-public.pem'),
   privateKey: fs.readFileSync(__dirname + '/rsa-private.pem'),
   sendEmail: function (opts, cb) {
+    // send email however you'd like (nodemailer, powerdrill, etc...)
     console.log(email)
     setImmediate(cb)
   }
@@ -76,7 +77,7 @@ var server = http.createServer(auth)
   * a `levelDB` compatible db instance (e.g. [multileveldown](https://github.com/mafintosh/multileveldown) or [levelup](https://github.com/level/levelup) + [sqldown](https://github.com/calvinmetcalf/sqldown), [dynamodown](https://github.com/davidguttman/dynamodown), [redisdown](https://github.com/hmalphettes/redisdown), etc... )
 * `privateKey`: RSA private key in PEM format. Can be created with the command: `openssl genrsa 4096 > rsa-private.pem`
 * `publicKey`: RSA public key in PEM format. Can be created with the command: `openssl rsa -in rsa-private.pem -pubout > rsa-public.pem`
-* `sendEmail(emailOpts, done)`: a function that sends email. Use the provided `emailOpts` to create and send  email and call `done(err)` when finished. If `err` is null or undefined, `authentic-server` will treat it as a success. `emailOpts` will come in one of two flavors depending on if it's a signup or a change password request:
+* `sendEmail(emailOpts, done)`: a function that sends email. Use the provided `emailOpts` to craft an email, then send it however you'd like ([nodemailer](https://github.com/andris9/Nodemailer), [powerdrill](https://github.com/rschmukler/powerdrill#readme), etc...), and call `done(err)` when finished. If `err` is null or undefined, `authentic-server` will treat it as a success. `emailOpts` will come in one of two flavors depending on if it's a signup or a change password request:
 
 ```js
 { type: 'signup',
