@@ -1,6 +1,6 @@
 var powerdrill = require('powerdrill')('your-api-key-here')
 
-function sendEmail (emailOpts, cb) {
+function sendEmail (emailOpts, done) {
   var message = powerdrill()
 
   var to = emailOpts.email
@@ -14,7 +14,7 @@ function sendEmail (emailOpts, cb) {
     subject = 'Password Reset'
     html = 'If you would like to reset your password <a href="' + emailOpts.changeUrl + '">you may do so here</a>.'
   } else {
-    return cb(new Error('Unknown email type'))
+    return done(new Error('Unknown email type'))
   }
 
   message
@@ -24,5 +24,5 @@ function sendEmail (emailOpts, cb) {
     .html(html)
     .trackClicks(false)
 
-  message.send(cb)
+  message.send(done)
 }
