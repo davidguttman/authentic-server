@@ -1,6 +1,6 @@
 var powerdrill = require('powerdrill')('your-api-key-here')
 
-function sendEmail (emailOpts, done) {
+module.exports = function sendEmail (emailOpts, done) {
   var message = powerdrill()
 
   var to = emailOpts.email
