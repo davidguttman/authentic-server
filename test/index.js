@@ -1,8 +1,8 @@
 var fs = require('fs')
+var http = require('http')
 var tape = require('tape')
 var servertest = require('servertest')
 
-var createServer = require('./server')
 var Authentic = require('../')
 
 var db = require('./fake-db')
@@ -118,9 +118,15 @@ tape('Auth: Confirm: should confirm user', function (t) {
       var data = JSON.parse(res.body)
       t.equal(data.success, true, 'should succeed')
       t.equal(data.message, 'User confirmed.', 'should have message')
-      t.equal(data.data.authToken.length, 808, 'should have token')
 
-      t.end()
+      Tokens.decode(data.data.authToken, function (err, payload) {
+        t.ifError(err, 'should not error')
+
+        t.equal(payload.email, 'david@scalehaus.io', 'payload should have email')
+        t.ok(payload.iat, 'should have iat')
+
+        t.end()
+      })
     })
   })
 })
@@ -177,14 +183,13 @@ tape('Auth: Login: should login', function (t) {
     var data = JSON.parse(res.body)
     t.equal(data.success, true, 'should succeed', 'should succeed')
     t.equal(data.message, 'Login successful.', 'should have message')
-    t.equal(data.data.authToken.length, 808, 'should have token')
 
     Tokens.decode(data.data.authToken, function (err, payload) {
       t.ifError(err, 'should not error')
 
       t.equal(payload.email, 'david@scalehaus.io', 'payload should have email')
       t.ok(payload.iat, 'should have iat')
-      t.ok(payload.expiresIn, 'should have expiresIn')
+      t.ok(payload.exp, 'should have exp')
       t.end()
     })
   })
@@ -293,9 +298,15 @@ tape('Auth: Change Password: should change password and login', function (t) {
       var data = JSON.parse(res.body)
       t.equal(data.success, true, 'should succeed')
       t.equal(data.message, 'Password changed.', 'should have message')
-      t.equal(data.data.authToken.length, 808, 'should have token')
 
-      t.end()
+      Tokens.decode(data.data.authToken, function (err, payload) {
+        t.ifError(err, 'should not error')
+
+        t.equal(payload.email, 'david@scalehaus.io', 'payload should have email')
+        t.ok(payload.iat, 'should have iat')
+        t.ok(payload.exp, 'should have exp')
+        t.end()
+      })
     })
   })
 })
@@ -329,3 +340,5 @@ function post (url, data, cb) {
 
   servertest(createServer(auth), url, opts, cb).end(JSON.stringify(data))
 }
+
+function createServer (auth) { return http.createServer(auth) }
