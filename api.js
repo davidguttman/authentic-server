@@ -63,12 +63,15 @@ API.prototype.signup = function (req, res, opts, cb) {
       urlObj.query.email = email
       confirmUrl = URL.format(urlObj)
 
-      var emailOpts = {
-        type: 'signup',
-        email: email,
-        confirmUrl: confirmUrl,
-        confirmToken: user.data.confirmToken
-      }
+      var emailOpts = {}
+      Object.keys(userData).forEach(function (k) {
+        if (k !== 'password') emailOpts[k] = userData[k]
+      })
+
+      emailOpts.type = 'signup'
+      emailOpts.email = email
+      emailOpts.confirmUrl = confirmUrl
+      emailOpts.confirmToken = user.data.confirmToken
 
       self.sendEmail(emailOpts, function (err) {
         if (err) return cb(err)
@@ -166,12 +169,13 @@ API.prototype.changePasswordRequest = function (req, res, opts, cb) {
       urlObj.query.email = email
       changeUrl = URL.format(urlObj)
 
-      var emailOpts = {
-        type: 'change-password-request',
-        email: email,
-        changeUrl: changeUrl,
-        changeToken: changeToken
-      }
+      var emailOpts = {}
+      Object.keys(userData).forEach(function (k) { emailOpts[k] = userData[k] })
+
+      emailOpts.type = 'change-password-request'
+      emailOpts.email = email
+      emailOpts.changeUrl = changeUrl
+      emailOpts.changeToken = changeToken
 
       self.sendEmail(emailOpts, function (err) {
         if (err) return cb(err)

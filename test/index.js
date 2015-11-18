@@ -13,11 +13,16 @@ var privateKey = fs.readFileSync(__dirname + '/rsa-private.pem')
 
 var Tokens = require('../tokens')({publicKey: publicKey, privateKey: privateKey})
 
+var lastEmail
+
 var auth = Authentic({
   db: db,
   publicKey: publicKey,
   privateKey: privateKey,
-  sendEmail: function (email, cb) { setImmediate(cb) }
+  sendEmail: function (email, cb) {
+    lastEmail = email
+    setImmediate(cb)
+  }
 })
 
 tape('Auth: should get public-key', function (t) {
@@ -64,6 +69,29 @@ tape('Auth: Signup: should error without confirmUrl', function (t) {
     var data = JSON.parse(res.body)
     t.notEqual(data.success, true, 'should not succeed')
     t.equal(data.error, 'ConfirmUrl Not Provided', 'should have error')
+
+    t.end()
+  })
+})
+
+tape('Auth: Signup: sendEmail should get email options', function (t) {
+  var postData = {
+    email: 'email@scalehaus.io',
+    password: 'swordfish',
+    confirmUrl: 'http://example.com/confirm',
+    from: 'from@somewhere.com',
+    subject: 'Client Defined Subject',
+    html: '<h1>Welcome</h1><p><a href="{{confirmUrl}}">Confirm</a></p>'
+  }
+
+  post('/auth/signup', postData, function (err, res) {
+    t.ifError(err, 'should not error')
+    t.equal(res.statusCode, 201)
+
+    t.notOk(lastEmail.password, 'should not have password')
+    t.equal(lastEmail.from, postData.from, 'should have from')
+    t.equal(lastEmail.subject, postData.subject, 'should have subject')
+    t.equal(lastEmail.html, postData.html, 'should have html')
 
     t.end()
   })
@@ -256,6 +284,27 @@ tape('Auth: Change Password Request: will create confirmed user', function (t) {
 
       t.end()
     })
+  })
+})
+
+tape('Auth: Change Password Request: sendEmail should get email options', function (t) {
+  var postData = {
+    email: 'email@scalehaus.io',
+    changeUrl: 'http://example.com/change',
+    from: 'from@somewhere.com',
+    subject: 'Change PW Subject',
+    html: '<h1>Change PW</h1><p><a href="{{changeUrl}}">Change</a></p>'
+  }
+
+  post('/auth/change-password-request', postData, function (err, res) {
+    t.ifError(err, 'should not error')
+    t.equal(res.statusCode, 200)
+
+    t.equal(lastEmail.from, postData.from, 'should have from')
+    t.equal(lastEmail.subject, postData.subject, 'should have subject')
+    t.equal(lastEmail.html, postData.html, 'should have html')
+
+    t.end()
   })
 })
 

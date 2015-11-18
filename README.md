@@ -77,12 +77,18 @@ var server = http.createServer(auth)
   * a `levelDB` compatible db instance (e.g. [multileveldown](https://github.com/mafintosh/multileveldown) or [levelup](https://github.com/level/levelup) + [sqldown](https://github.com/calvinmetcalf/sqldown), [dynamodown](https://github.com/davidguttman/dynamodown), [redisdown](https://github.com/hmalphettes/redisdown), etc... )
 * `privateKey`: RSA private key in PEM format. Can be created with the command: `openssl genrsa 4096 > rsa-private.pem`
 * `publicKey`: RSA public key in PEM format. Can be created with the command: `openssl rsa -in rsa-private.pem -pubout > rsa-public.pem`
-* `sendEmail(emailOpts, done)`: please provide function that sends email how you'd like. Use the provided `emailOpts` to craft an email, send it, and call `done(err)` when finished. Here's an [example using Mandrill/powerdrill](https://github.com/davidguttman/authentic-server/blob/master/example/send-email-mandrill.js), but [nodemailer](https://github.com/andris9/Nodemailer) or anything else would work great too. If `err` is null or undefined, `authentic-server` will treat it as a success. `emailOpts` will come in one of two flavors depending on if it's a signup or a change password request:
+* `sendEmail(emailOpts, done)`: please provide function that sends email how you'd like. Use the provided `emailOpts` to craft an email, send it, and call `done(err)` when finished.
+  * Here's an [example using Mandrill/powerdrill](https://github.com/davidguttman/authentic-server/blob/master/example/send-email-mandrill.js), but [nodemailer](https://github.com/andris9/Nodemailer) or anything else would work great too.
+  * Any additional data sent in the POST will be available -- if you'd like to customize the "from" address or provide a "subject" from the client to use here, you may.
+  * If `err` is null or undefined, `authentic-server` will treat it as a success.
+  * `emailOpts` will come in one of two flavors depending on if it's a signup or a change password request:
 
 ```js
 { type: 'signup',
   email: 'david@scalehaus.io',
-  confirmUrl: 'https://scalehaus.io/confirm?confirmToken=9a1dccd9f...' }
+  confirmUrl: 'https://scalehaus.io/confirm?confirmToken=9a1dccd9f...',
+  from: 'Authentic Accounts <auth@authentc.com>' // This will only be available if provided with the POST to /signup
+}
 ```
 
 OR
@@ -90,7 +96,9 @@ OR
 ```js
 { type: 'change-password-request',
   email: 'david@scalehaus.io',
-  changeUrl: 'https://scalehaus.io/change-password?changeToken=0b4fa5904752b...' }
+  changeUrl: 'https://scalehaus.io/change-password?changeToken=0b4fa5904752b...',
+  from: 'Authentic Accounts <auth@authentc.com>' // This will only be available if provided with the POST to /change-password-request
+} }
 ```
 
 Optional:
