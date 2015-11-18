@@ -112,11 +112,13 @@ Optional:
 
 Accepts a JSON object:
 
-```
+```js
 {
-    "email": "david@scalehaus.io",
-    "password": "notswordfish",
-    "confirmUrl": "https://yourwebapp.com/path/to/confirmation"
+    "email": "david@scalehaus.io", // required
+    "password": "notswordfish", // required
+    "confirmUrl": "https://yourwebapp.com/path/to/confirmation", // required
+    "from": "Authentic Accounts <auth@authentc.com>", // additional data will be provided to sendEmail
+    "provide": "anything you'd like" // you can pass anything you'd like
 }
 ```
 
@@ -181,10 +183,12 @@ This endpoint will check the email/password and will respond with an `authToken`
 
 Accepts a JSON object:
 
-```
+```js
 {
-    "email": "david@scalehaus.io",
-    "changeUrl": "https://yourwebapp.com/path/to/change-password"
+    "email": "david@scalehaus.io", // required
+    "changeUrl": "https://yourwebapp.com/path/to/change-password", // required
+    "from": "Authentic Accounts <auth@authentc.com>", // additional data will be provided to sendEmail
+    "provide": "anything you'd like" // you can pass anything you'd like
 }
 ```
 
