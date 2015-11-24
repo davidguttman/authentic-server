@@ -46,22 +46,18 @@ API.prototype.signup = function (req, res, opts, cb) {
     var pass = userData.password
     var confirmUrl = userData.confirmUrl
 
-    if (!confirmUrl) {
-      err = new Error('ConfirmUrl Not Provided')
-      err.statusCode = clientErrors[err.message] || 500
-      return cb(err)
-    }
-
     self.Users.createUser(email, pass, function (err, user) {
       if (err) {
         err.statusCode = clientErrors[err.message] || 500
         return cb(err)
       }
 
-      var urlObj = URL.parse(confirmUrl, true)
-      urlObj.query.confirmToken = user.data.confirmToken
-      urlObj.query.email = email
-      confirmUrl = URL.format(urlObj)
+      if (confirmUrl) {
+        var urlObj = URL.parse(confirmUrl, true)
+        urlObj.query.confirmToken = user.data.confirmToken
+        urlObj.query.email = email
+        confirmUrl = URL.format(urlObj)
+      }
 
       var emailOpts = {}
       Object.keys(userData).forEach(function (k) {
@@ -155,19 +151,15 @@ API.prototype.changePasswordRequest = function (req, res, opts, cb) {
     var email = userData.email
     var changeUrl = userData.changeUrl
 
-    if (!changeUrl) {
-      err = new Error('ChangeUrl Not Provided')
-      err.statusCode = clientErrors[err.message] || 500
-      return cb(err)
-    }
-
     self.Users.createChangeToken(email, function (err, changeToken) {
       if (err) return cb(err)
 
-      var urlObj = URL.parse(changeUrl, true)
-      urlObj.query.changeToken = changeToken
-      urlObj.query.email = email
-      changeUrl = URL.format(urlObj)
+      if (changeUrl) {
+        var urlObj = URL.parse(changeUrl, true)
+        urlObj.query.changeToken = changeToken
+        urlObj.query.email = email
+        changeUrl = URL.format(urlObj)
+      }
 
       var emailOpts = {}
       Object.keys(userData).forEach(function (k) { emailOpts[k] = userData[k] })

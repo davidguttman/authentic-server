@@ -116,7 +116,7 @@ Accepts a JSON object:
 {
     "email": "david@scalehaus.io", // required
     "password": "notswordfish", // required
-    "confirmUrl": "https://yourwebapp.com/path/to/confirmation", // required
+    "confirmUrl": "https://yourwebapp.com/path/to/confirmation", // optional, if included will have ?email=${email}&confirmToken=${confirmToken} automatically added
     "from": "Authentic Accounts <auth@authentc.com>", // additional data will be provided to sendEmail
     "provide": "anything you'd like" // you can pass anything you'd like
 }
@@ -186,7 +186,7 @@ Accepts a JSON object:
 ```js
 {
     "email": "david@scalehaus.io", // required
-    "changeUrl": "https://yourwebapp.com/path/to/change-password", // required
+    "changeUrl": "https://yourwebapp.com/path/to/change-password", // optional, if included will have ?email=${email}&confirmToken=${confirmToken} automatically added
     "from": "Authentic Accounts <auth@authentc.com>", // additional data will be provided to sendEmail
     "provide": "anything you'd like" // you can pass anything you'd like
 }
