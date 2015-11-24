@@ -1,6 +1,6 @@
 {
   "name": "authentic-server",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "This is the server component of Authentic. This provides endpoints for signup, login, confirm, and password change.",
   "main": "index.js",
   "scripts": {
