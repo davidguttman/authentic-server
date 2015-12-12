@@ -58,17 +58,18 @@ tape('Auth: Signup: should be able to sign up', function (t) {
   })
 })
 
-tape('Auth: Signup: should error without confirmUrl', function (t) {
-  var postData = {email: 'confirmurl@scalehaus.io', password: 'swordfish'}
+tape('Auth: Login: should fail without confirm', function (t) {
+  var postData = {email: 'david@scalehaus.io', password: 'swordfish'}
 
-  post('/auth/signup', postData, function (err, res) {
+  post('/auth/login', postData, function (err, res) {
     t.ifError(err, 'should not error')
 
-    t.equal(res.statusCode, 400)
+    t.equal(res.statusCode, 401)
 
     var data = JSON.parse(res.body)
-    t.notEqual(data.success, true, 'should not succeed')
-    t.equal(data.error, 'ConfirmUrl Not Provided', 'should have error')
+    console.log('data', data)
+    t.equal(data.success, false, 'should not succeed')
+    t.equal(data.error, 'User Not Confirmed', 'should have error')
 
     t.end()
   })
@@ -244,22 +245,6 @@ tape('Auth: Change Password Request', function (t) {
 
       t.end()
     })
-  })
-})
-
-tape('Auth: Change Password Request: error without changeUrl', function (t) {
-  var postData = {email: 'david@scalehaus.io'}
-
-  post('/auth/change-password-request', postData, function (err, res) {
-    t.ifError(err, 'should not error')
-
-    t.equal(res.statusCode, 400)
-
-    var data = JSON.parse(res.body)
-    t.notEqual(data.success, true, 'should not succeed')
-    t.equal(data.error, 'ChangeUrl Not Provided', 'should have error')
-
-    t.end()
   })
 })
 

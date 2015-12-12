@@ -10,6 +10,7 @@ var clientErrors = {
   'ChangeUrl Not Provided': 400,
   'Invalid Email': 400,
   'Invalid Password': 400,
+  'User Not Confirmed': 401,
   'Token Mismatch': 401,
   'Already Confirmed': 400,
   'Password Mismatch': 401,
@@ -125,6 +126,13 @@ API.prototype.login = function (req, res, opts, cb) {
 
     self.Users.checkPassword(email, pass, function (err, user) {
       if (err) {
+        err.statusCode = clientErrors[err.message] || 500
+        return cb(err)
+      }
+
+      var isConfirmed = (user.data || {}).emailConfirmed
+      if (!isConfirmed) {
+        err = new Error('User Not Confirmed')
         err.statusCode = clientErrors[err.message] || 500
         return cb(err)
       }
