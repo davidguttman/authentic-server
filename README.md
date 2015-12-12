@@ -13,9 +13,11 @@ var auth = Authentic({
   db: __dirname + '/users/',
   publicKey: fs.readFileSync(__dirname + '/rsa-public.pem'),
   privateKey: fs.readFileSync(__dirname + '/rsa-private.pem'),
-  sendEmail: function (opts, cb) {
+  sendEmail: function (emailOpts, cb) {
     // send email however you'd like (nodemailer, powerdrill, etc...)
-    console.log(email)
+    // emailOpts.type is either 'signup' or 'change-password-request'
+    // emailOpts.email is where to send the email
+    // see API docs for more properties like confirmToken and changeToken
     setImmediate(cb)
   }
 })
@@ -45,7 +47,7 @@ var auth = Authentic({
   privateKey: fs.readFileSync(__dirname + '/rsa-private.pem'),
   publicKey: fs.readFileSync(__dirname + '/rsa-public.pem'),
   sendEmail: function (emailOpts, done) {
-    console.log(email)
+    console.log(emailOpts)
     setImmediate(done)
   }
 })
@@ -86,8 +88,9 @@ var server = http.createServer(auth)
 ```js
 { type: 'signup',
   email: 'david@scalehaus.io',
-  confirmUrl: 'https://scalehaus.io/confirm?confirmToken=9a1dccd9f...',
-  from: 'Authentic Accounts <auth@authentc.com>' // This will only be available if provided with the POST to /signup
+  confirmToken: '9a1dccd9f...',
+  confirmUrl: 'https://scalehaus.io/confirm?confirmToken=9a1dccd9f...', // if provided with POST to /signup
+  from: 'Authentic Accounts <auth@authentc.com>' // if provided with the POST to /signup
 }
 ```
 
@@ -96,8 +99,9 @@ OR
 ```js
 { type: 'change-password-request',
   email: 'david@scalehaus.io',
-  changeUrl: 'https://scalehaus.io/change-password?changeToken=0b4fa5904752b...',
-  from: 'Authentic Accounts <auth@authentc.com>' // This will only be available if provided with the POST to /change-password-request
+  changeToken: '0b4fa5904752b...',
+  changeUrl: 'https://scalehaus.io/change-password?changeToken=0b4fa5904752b...', // if provided with the POST to /change-password-request
+  from: 'Authentic Accounts <auth@authentc.com>' // if provided with the POST to /change-password-request
 } }
 ```
 
