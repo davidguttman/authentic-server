@@ -248,6 +248,30 @@ tape('Auth: Change Password Request', function (t) {
   })
 })
 
+tape('Auth: Change Password Request should fix case', function (t) {
+  var postData = {email: 'TitleCase24@scalehaus.io', changeUrl: 'http://example.com/change'}
+
+  post('/auth/change-password-request', postData, function (err, res) {
+    t.ifError(err, 'should not error')
+
+    t.equal(res.statusCode, 200)
+
+    var data = JSON.parse(res.body)
+    t.ok(data.success, 'should succeed')
+    t.equal(data.message, 'Change password request received. Check email for confirmation link.')
+
+    Users.findUser(postData.email.toLowerCase(), function (err, user) {
+      t.ifError(err, 'should not error')
+
+      t.equal(user.data.emailConfirmed, true, 'email should be confirmed')
+      t.equal(user.data.changeToken.length, 60, 'should have change token')
+      t.ok(user.data.changeExpires > Date.now(), 'should have changeExpires')
+
+      t.end()
+    })
+  })
+})
+
 tape('Auth: Change Password Request: will create confirmed user', function (t) {
   var postData = {email: 'unknownuser@scalehaus.io', changeUrl: 'http://example.com/change'}
 

@@ -40,7 +40,7 @@ API.prototype.publicKey = function (req, res, opts, cb) {
 API.prototype.signup = function (req, res, opts, cb) {
   var self = this
 
-  jsonBody(req, res, function (err, userData) {
+  parseBody(req, res, function (err, userData) {
     if (err) return cb(err)
 
     var email = userData.email
@@ -90,7 +90,7 @@ API.prototype.signup = function (req, res, opts, cb) {
 API.prototype.confirm = function (req, res, opts, cb) {
   var self = this
 
-  jsonBody(req, res, function (err, userData) {
+  parseBody(req, res, function (err, userData) {
     if (err) return cb(err)
 
     var email = userData.email
@@ -118,7 +118,7 @@ API.prototype.confirm = function (req, res, opts, cb) {
 API.prototype.login = function (req, res, opts, cb) {
   var self = this
 
-  jsonBody(req, res, function (err, userData) {
+  parseBody(req, res, function (err, userData) {
     if (err) return cb(err)
 
     var email = userData.email
@@ -153,7 +153,7 @@ API.prototype.login = function (req, res, opts, cb) {
 API.prototype.changePasswordRequest = function (req, res, opts, cb) {
   var self = this
 
-  jsonBody(req, res, function (err, userData) {
+  parseBody(req, res, function (err, userData) {
     if (err) return cb(err)
 
     var email = userData.email
@@ -193,7 +193,7 @@ API.prototype.changePasswordRequest = function (req, res, opts, cb) {
 API.prototype.changePassword = function (req, res, opts, cb) {
   var self = this
 
-  jsonBody(req, res, function (err, userData) {
+  parseBody(req, res, function (err, userData) {
     if (err) return cb(err)
 
     var email = userData.email
@@ -221,5 +221,14 @@ API.prototype.changePassword = function (req, res, opts, cb) {
         }))
       })
     })
+  })
+}
+
+function parseBody (req, res, cb) {
+  jsonBody(req, res, function (err, parsed) {
+    if (typeof (parsed || {}).email === 'string') {
+      parsed.email = parsed.email.toLowerCase()
+    }
+    cb(err, parsed)
   })
 }
