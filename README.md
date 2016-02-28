@@ -14,7 +14,7 @@ var auth = Authentic({
   publicKey: fs.readFileSync(__dirname + '/rsa-public.pem'),
   privateKey: fs.readFileSync(__dirname + '/rsa-private.pem'),
   sendEmail: function (emailOpts, cb) {
-    // send email however you'd like (nodemailer, powerdrill, etc...)
+    // send email however you'd like (nodemailer, SparkPost, etc...)
     // emailOpts.type is either 'signup' or 'change-password-request'
     // emailOpts.email is where to send the email
     // see API docs for more properties like confirmToken and changeToken
@@ -80,7 +80,7 @@ var server = http.createServer(auth)
 * `privateKey`: RSA private key in PEM format. Can be created with the command: `openssl genrsa 4096 > rsa-private.pem`
 * `publicKey`: RSA public key in PEM format. Can be created with the command: `openssl rsa -in rsa-private.pem -pubout > rsa-public.pem`
 * `sendEmail(emailOpts, done)`: please provide function that sends email how you'd like. Use the provided `emailOpts` to craft an email, send it, and call `done(err)` when finished.
-  * Here's an [example using Mandrill/powerdrill](https://github.com/davidguttman/authentic-server/blob/master/example/send-email-mandrill.js), but [nodemailer](https://github.com/andris9/Nodemailer) or anything else would work great too.
+  * Here's an [example using SparkPost](https://github.com/davidguttman/authentic-server/blob/master/example/send-email-sparkpost.js), but [nodemailer](https://github.com/andris9/Nodemailer) or anything else would work great too.
   * Any additional data sent in the POST will be available -- if you'd like to customize the "from" address or provide a "subject" from the client to use here, you may.
   * If `err` is null or undefined, `authentic-server` will treat it as a success.
   * `emailOpts` will come in one of two flavors depending on if it's a signup or a change password request:
