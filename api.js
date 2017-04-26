@@ -55,9 +55,11 @@ API.prototype.signup = function (req, res, opts, cb) {
 
       if (confirmUrl) {
         var urlObj = URL.parse(confirmUrl, true)
+        var hash = urlObj.hash
+        urlObj.hash = ''
         urlObj.query.confirmToken = user.data.confirmToken
         urlObj.query.email = email
-        confirmUrl = URL.format(urlObj)
+        confirmUrl = URL.format(urlObj) + '/' + (hash || '')
       }
 
       var emailOpts = {}
@@ -164,9 +166,11 @@ API.prototype.changePasswordRequest = function (req, res, opts, cb) {
 
       if (changeUrl) {
         var urlObj = URL.parse(changeUrl, true)
+        var hash = urlObj.hash
+        urlObj.hash = ''
         urlObj.query.changeToken = changeToken
         urlObj.query.email = email
-        changeUrl = URL.format(urlObj)
+        changeUrl = URL.format(urlObj) + '/' + (hash || '')
       }
 
       var emailOpts = {}
