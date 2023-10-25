@@ -1,5 +1,5 @@
 var crypto = require('crypto')
-var ulevel = require('ix-level-userdb')
+var ulevel = require('dg-level-userdb')
 var level = require('level')
 
 var Users = module.exports = function (db) {
