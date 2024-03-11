@@ -145,9 +145,15 @@ Users.prototype.createChangeToken = function (email, expires, cb) {
       return cb(err)
     }
 
+    if (user.data == null) user.data = {}
+
+    var tokenValid =
+      user.data.changeToken && user.data.changeExpires >= Date.now()
+    
+    if (tokenValid) return cb(null, user.data.changeToken)
+
     generateToken(30, function (err, token) {
       if (err) return cb(err)
-      if (user.data == null) user.data = {}
 
       user.data.changeToken = token
       user.data.changeExpires = expires
