@@ -2,14 +2,14 @@ var crypto = require('crypto')
 var ulevel = require('dg-level-userdb')
 var level = require('level')
 
-var Users = module.exports = function (db) {
+var Users = (module.exports = function (db) {
   if (!(this instanceof Users)) return new Users(db)
 
   var adapted = typeof db === 'string' ? createLevelDB(db) : this.adaptDB(db)
   this.db = ulevel(adapted)
 
   return this
-}
+})
 
 Users.prototype.adaptDB = function (dbObj) {
   return {
@@ -72,7 +72,7 @@ Users.prototype.createUser = function (email, password, cb) {
     generateToken(30, function (err, token) {
       if (err) return cb(err)
 
-      var data = {emailConfirmed: false, confirmToken: token}
+      var data = { emailConfirmed: false, confirmToken: token }
 
       self.db.addUser(email, password, data, function (err) {
         if (err) return cb(err)
@@ -88,7 +88,8 @@ Users.prototype.confirmUser = function (email, token, cb) {
   this.findUser(email, function (err, user) {
     if (err) return cb(err)
 
-    if (user.data.emailConfirmed === true) return cb(new Error('Already Confirmed'))
+    if (user.data.emailConfirmed === true)
+      return cb(new Error('Already Confirmed'))
 
     if (user.data.confirmToken !== token) return cb(new Error('Token Mismatch'))
 
@@ -149,7 +150,7 @@ Users.prototype.createChangeToken = function (email, expires, cb) {
 
     var tokenValid =
       user.data.changeToken && user.data.changeExpires >= Date.now()
-    
+
     if (tokenValid) return cb(null, user.data.changeToken)
 
     generateToken(30, function (err, token) {
@@ -213,5 +214,5 @@ function validPassword (password) {
 }
 
 function createLevelDB (location) {
-  return level(location, {valueEncoding: 'json'})
+  return level(location, { valueEncoding: 'json' })
 }
