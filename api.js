@@ -18,7 +18,7 @@ var clientErrors = {
   'Token Expired': 400
 }
 
-var API = module.exports = function (opts) {
+var API = (module.exports = function (opts) {
   if (!(this instanceof API)) return new API(opts)
 
   this.sendEmail = opts.sendEmail
@@ -26,15 +26,17 @@ var API = module.exports = function (opts) {
   this.Users = Users(opts.db)
 
   return this
-}
+})
 
 API.prototype.publicKey = function (req, res, opts, cb) {
-  res.end(JSON.stringify({
-    success: true,
-    data: {
-      publicKey: this.Tokens.publicKey
-    }
-  }))
+  res.end(
+    JSON.stringify({
+      success: true,
+      data: {
+        publicKey: this.Tokens.publicKey
+      }
+    })
+  )
 }
 
 API.prototype.signup = function (req, res, opts, cb) {
@@ -73,15 +75,17 @@ API.prototype.signup = function (req, res, opts, cb) {
       self.sendEmail(emailOpts, function (err) {
         if (err) return cb(err)
 
-        res.writeHead(201, {'Content-Type': 'application/json'})
-        res.end(JSON.stringify({
-          success: true,
-          message: 'User created. Check email for confirmation link.',
-          data: {
-            email: user.email,
-            createdDate: user.createdDate
-          }
-        }))
+        res.writeHead(201, { 'Content-Type': 'application/json' })
+        res.end(
+          JSON.stringify({
+            success: true,
+            message: 'User created. Check email for confirmation link.',
+            data: {
+              email: user.email,
+              createdDate: user.createdDate
+            }
+          })
+        )
       })
     })
   })
@@ -103,14 +107,16 @@ API.prototype.confirm = function (req, res, opts, cb) {
       }
 
       var token = self.Tokens.encode(email)
-      res.writeHead(202, {'Content-Type': 'application/json'})
-      res.end(JSON.stringify({
-        success: true,
-        message: 'User confirmed.',
-        data: {
-          authToken: token
-        }
-      }))
+      res.writeHead(202, { 'Content-Type': 'application/json' })
+      res.end(
+        JSON.stringify({
+          success: true,
+          message: 'User confirmed.',
+          data: {
+            authToken: token
+          }
+        })
+      )
     })
   })
 }
@@ -138,14 +144,16 @@ API.prototype.login = function (req, res, opts, cb) {
       }
 
       var token = self.Tokens.encode(email)
-      res.writeHead(202, {'Content-Type': 'application/json'})
-      res.end(JSON.stringify({
-        success: true,
-        message: 'Login successful.',
-        data: {
-          authToken: token
-        }
-      }))
+      res.writeHead(202, { 'Content-Type': 'application/json' })
+      res.end(
+        JSON.stringify({
+          success: true,
+          message: 'Login successful.',
+          data: {
+            authToken: token
+          }
+        })
+      )
     })
   })
 }
@@ -170,7 +178,9 @@ API.prototype.changePasswordRequest = function (req, res, opts, cb) {
       }
 
       var emailOpts = {}
-      Object.keys(userData).forEach(function (k) { emailOpts[k] = userData[k] })
+      Object.keys(userData).forEach(function (k) {
+        emailOpts[k] = userData[k]
+      })
 
       emailOpts.type = 'change-password-request'
       emailOpts.email = email
@@ -180,11 +190,14 @@ API.prototype.changePasswordRequest = function (req, res, opts, cb) {
       self.sendEmail(emailOpts, function (err) {
         if (err) return cb(err)
 
-        res.writeHead(200, {'Content-Type': 'application/json'})
-        res.end(JSON.stringify({
-          success: true,
-          message: 'Change password request received. Check email for confirmation link.'
-        }))
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(
+          JSON.stringify({
+            success: true,
+            message:
+              'Change password request received. Check email for confirmation link.'
+          })
+        )
       })
     })
   })
@@ -200,26 +213,109 @@ API.prototype.changePassword = function (req, res, opts, cb) {
     var password = userData.password
     var changeToken = userData.changeToken
 
-    self.Users.changePassword(email, password, changeToken, function (err, something) {
+    self.Users.changePassword(
+      email,
+      password,
+      changeToken,
+      function (err, something) {
+        if (err) {
+          err.statusCode = clientErrors[err.message] || 500
+          return cb(err)
+        }
+
+        self.Users.checkPassword(email, password, function (err, user) {
+          if (err) return cb(err)
+
+          var authToken = self.Tokens.encode(email)
+
+          res.writeHead(200, { 'Content-Type': 'application/json' })
+          res.end(
+            JSON.stringify({
+              success: true,
+              message: 'Password changed.',
+              data: {
+                authToken: authToken
+              }
+            })
+          )
+        })
+      }
+    )
+  })
+}
+
+API.prototype.magicRequest = function (req, res, opts, cb) {
+  var self = this
+
+  parseBody(req, res, function (err, userData) {
+    if (err) return cb(err)
+
+    var email = userData.email
+    var magicUrl = userData.magicUrl
+
+    self.Users.createMagicToken(email, function (err, magicToken) {
+      if (err) return cb(err)
+
+      if (magicUrl) {
+        var urlObj = URL.parse(magicUrl, true)
+        urlObj.query.magicToken = magicToken
+        urlObj.query.email = email
+        magicUrl = URL.format(urlObj)
+      }
+
+      var emailOpts = {}
+      Object.keys(userData).forEach(function (k) {
+        emailOpts[k] = userData[k]
+      })
+
+      emailOpts.type = 'magic-request'
+      emailOpts.email = email
+      emailOpts.magicUrl = magicUrl
+      emailOpts.magicToken = magicToken
+
+      self.sendEmail(emailOpts, function (err) {
+        if (err) return cb(err)
+
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(
+          JSON.stringify({
+            success: true,
+            message:
+              'Magic login request received. Check email for confirmation link.'
+          })
+        )
+      })
+    })
+  })
+}
+
+API.prototype.magicLogin = function (req, res, opts, cb) {
+  var self = this
+
+  parseBody(req, res, function (err, userData) {
+    if (err) return cb(err)
+
+    var email = userData.email
+    var magicToken = userData.magicToken
+
+    self.Users.checkMagicToken(email, magicToken, function (err, user) {
       if (err) {
         err.statusCode = clientErrors[err.message] || 500
         return cb(err)
       }
 
-      self.Users.checkPassword(email, password, function (err, user) {
-        if (err) return cb(err)
+      var authToken = self.Tokens.encode(email)
 
-        var authToken = self.Tokens.encode(email)
-
-        res.writeHead(200, {'Content-Type': 'application/json'})
-        res.end(JSON.stringify({
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(
+        JSON.stringify({
           success: true,
-          message: 'Password changed.',
+          message: 'Magic login successful.',
           data: {
             authToken: authToken
           }
-        }))
-      })
+        })
+      )
     })
   })
 }
