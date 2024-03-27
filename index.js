@@ -20,6 +20,10 @@ module.exports = function (opts) {
   router.set(routePrefix + '/change-password', {
     POST: api.changePassword.bind(api)
   })
+  router.set(routePrefix + '/magic-request', {
+    POST: api.magicRequest.bind(api)
+  })
+  router.set(routePrefix + '/magic-login', { POST: api.magicLogin.bind(api) })
   router.set(routePrefix + '/public-key', { GET: api.publicKey.bind(api) })
 
   function handler (req, res, next) {

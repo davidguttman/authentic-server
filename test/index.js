@@ -434,6 +434,155 @@ tape('Auth: Change Password: should error with expired token', function (t) {
   })
 })
 
+tape('Auth: Magic Request & Login: existing user should be able to get in via magic-request and magic-login', function (t) {
+  var postData = {
+    email: 'david@scalehaus.io',
+    magicUrl: 'http://example.com/magic-login'
+  }
+
+  post('/auth/magic-request', postData, function (err, res) {
+    t.ifError(err, 'should not error')
+
+    t.equal(res.statusCode, 200)
+
+    var data = JSON.parse(res.body)
+    t.equal(data.success, true, 'Magic request should succeed')
+    t.equal(
+      data.message,
+      'Magic login request received. Check email for confirmation link.',
+      'should have correct message'
+    )
+
+    // Simulate clicking the magic link received in the email
+    var magicLoginData = {
+      email: 'david@scalehaus.io',
+      magicToken: lastEmail.magicToken // Assuming lastEmail is accessible and contains the magicToken
+    }
+
+    post('/auth/magic-login', magicLoginData, function (err, res) {
+      t.ifError(err, 'should not error')
+
+      t.equal(res.statusCode, 200)
+
+      var loginData = JSON.parse(res.body)
+      t.equal(loginData.success, true, 'Magic login should succeed')
+      t.ok(loginData.data.authToken, 'should have authToken')
+
+      Tokens.decode(loginData.data.authToken, function (err, payload) {
+        t.ifError(err, 'should not error')
+
+        t.equal(
+          payload.email,
+          'david@scalehaus.io',
+          'payload should have email'
+        )
+        t.ok(payload.iat, 'should have iat')
+        t.ok(payload.exp, 'should have exp')
+
+        // Test login with password for existing user
+        var loginWithPasswordData = {
+          email: 'david@scalehaus.io',
+          password: 'newpass'
+        }
+
+        post('/auth/login', loginWithPasswordData, function (err, res) {
+          t.ifError(err, 'should not error on password login')
+
+          t.equal(res.statusCode, 202, 'status code should be 202 for password login')
+
+          var passwordLoginData = JSON.parse(res.body)
+          t.equal(passwordLoginData.success, true, 'Password login should succeed')
+          t.ok(passwordLoginData.data.authToken, 'should have authToken on password login')
+
+          Tokens.decode(passwordLoginData.data.authToken, function (err, payload) {
+            t.ifError(err, 'should not error on decoding authToken from password login')
+
+            t.equal(
+              payload.email,
+              'david@scalehaus.io',
+              'payload from password login should have email'
+            )
+            t.ok(payload.iat, 'should have iat on password login')
+            t.ok(payload.exp, 'should have exp on password login')
+
+            t.end()
+          })
+        })
+      })
+    })
+  })
+})
+
+tape('Auth: Magic Login: unknown user should be able to get in via magic login', function (t) {
+  var postData = {
+    email: 'unknown@scalehaus.io',
+    magicUrl: 'http://example.com/magic-login'
+  }
+
+  post('/auth/magic-request', postData, function (err, res) {
+    t.ifError(err, 'should not error')
+
+    t.equal(res.statusCode, 200)
+
+    var data = JSON.parse(res.body)
+    t.equal(data.success, true, 'should succeed')
+    t.equal(
+      data.message,
+      'Magic login request received. Check email for confirmation link.',
+      'should have message'
+    )
+
+    // Simulate clicking the magic link received in the email
+    var magicLoginData = {
+      email: 'unknown@scalehaus.io',
+      magicToken: lastEmail.magicToken // Assuming lastEmail is accessible and contains the magicToken
+    }
+
+    post('/auth/magic-login', magicLoginData, function (err, res) {
+      t.ifError(err, 'should not error')
+
+      t.equal(res.statusCode, 200)
+
+      var loginData = JSON.parse(res.body)
+      t.equal(loginData.success, true, 'should succeed')
+      t.ok(loginData.data.authToken, 'should have authToken')
+
+      Tokens.decode(loginData.data.authToken, function (err, payload) {
+        t.ifError(err, 'should not error')
+
+        t.equal(
+          payload.email,
+          'unknown@scalehaus.io',
+          'payload should have email'
+        )
+        t.ok(payload.iat, 'should have iat')
+        t.ok(payload.exp, 'should have exp')
+        t.end()
+      })
+    })
+  })
+})
+
+tape('Auth: Magic Login: should fail with invalid magic token', function (t) {
+  var postData = {
+    email: 'unknown@scalehaus.io',
+    magicToken: 'invalid-token'
+  }
+
+  post('/auth/magic-login', postData, function (err, res) {
+    t.ifError(err, 'should not error')
+
+    t.equal(res.statusCode, 401, 'should return 401 Unauthorized')
+
+    var data = JSON.parse(res.body)
+    t.equal(data.success, false, 'should fail')
+    t.equal(data.error, 'Token Mismatch', 'should return token mismatch message')
+    t.notOk((data.data || {}).authToken, 'should not have token')
+
+    t.end()
+  })
+})
+
 function post (url, data, cb) {
   var opts = {
     method: 'POST',

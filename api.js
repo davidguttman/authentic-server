@@ -244,6 +244,82 @@ API.prototype.changePassword = function (req, res, opts, cb) {
   })
 }
 
+API.prototype.magicRequest = function (req, res, opts, cb) {
+  var self = this
+
+  parseBody(req, res, function (err, userData) {
+    if (err) return cb(err)
+
+    var email = userData.email
+    var magicUrl = userData.magicUrl
+
+    self.Users.createMagicToken(email, function (err, magicToken) {
+      if (err) return cb(err)
+
+      if (magicUrl) {
+        var urlObj = URL.parse(magicUrl, true)
+        urlObj.query.magicToken = magicToken
+        urlObj.query.email = email
+        magicUrl = URL.format(urlObj)
+      }
+
+      var emailOpts = {}
+      Object.keys(userData).forEach(function (k) {
+        emailOpts[k] = userData[k]
+      })
+
+      emailOpts.type = 'magic-request'
+      emailOpts.email = email
+      emailOpts.magicUrl = magicUrl
+      emailOpts.magicToken = magicToken
+
+      self.sendEmail(emailOpts, function (err) {
+        if (err) return cb(err)
+
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(
+          JSON.stringify({
+            success: true,
+            message:
+              'Magic login request received. Check email for confirmation link.'
+          })
+        )
+      })
+    })
+  })
+}
+
+API.prototype.magicLogin = function (req, res, opts, cb) {
+  var self = this
+
+  parseBody(req, res, function (err, userData) {
+    if (err) return cb(err)
+
+    var email = userData.email
+    var magicToken = userData.magicToken
+
+    self.Users.checkMagicToken(email, magicToken, function (err, user) {
+      if (err) {
+        err.statusCode = clientErrors[err.message] || 500
+        return cb(err)
+      }
+
+      var authToken = self.Tokens.encode(email)
+
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(
+        JSON.stringify({
+          success: true,
+          message: 'Magic login successful.',
+          data: {
+            authToken: authToken
+          }
+        })
+      )
+    })
+  })
+}
+
 function parseBody (req, res, cb) {
   jsonBody(req, res, function (err, parsed) {
     if (typeof (parsed || {}).email === 'string') {

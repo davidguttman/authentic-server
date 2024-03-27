@@ -228,6 +228,52 @@ This endpoint will check if the `changeToken` is correct, and if it is it will c
 }
 ```
 
+### POST `/auth/magic-request`
+
+Accepts a JSON object:
+
+```js
+{
+    "email": "user@example.com",
+    "magicUrl": "https://yourwebapp.com/path/to/magic-action",
+    "from": "Your Service Name <no-reply@yourdomain.com>",
+    "provide": "anything you'd like"
+}
+```
+
+This endpoint generates a `magicToken` for the user, and if a `magicUrl` is provided, it appends this token along with the user's email to the URL. It then sends an email to the user with the `magicUrl` or instructions for the next steps. On success, it responds with:
+
+```js
+{
+  "success": true,
+  "message": "Magic login request received. Check email for confirmation link."
+}
+```
+
+This functionality allows for a seamless login or action confirmation process without the need for the user to remember a password, enhancing the user experience by leveraging a "magic link" sent via email.
+
+### POST `/auth/magic-login`
+
+Accepts a JSON object:
+
+```
+{
+    "email": "david@scalehaus.io",
+    "magicToken": "ada2..."
+}
+```
+This endpoint will check if the `magicToken` is correct, and if it is it will respond with an `authToken`:
+
+```
+{
+    "success": true,
+    "message": "Magic login successful.",
+    "data": {
+        "authToken": "eyJ0eXAiOiJ..."
+    }
+}
+```
+
 ### GET `/auth/public-key`
 
 Responds with the server's public key. This is what allows your other services to decrypt the `authToken` and know who the user is and that the data was encrypted by this server.
