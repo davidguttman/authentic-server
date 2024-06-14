@@ -8,6 +8,8 @@ module.exports = function (opts) {
 
   var routePrefix = opts.routePrefix || '/auth'
 
+  var shouldGoogle = opts.googleClientId && opts.googleClientSecret && opts.googleRedirectUrl
+
   var api = API(opts)
 
   var router = HttpHashRouter()
@@ -25,6 +27,11 @@ module.exports = function (opts) {
   })
   router.set(routePrefix + '/magic-login', { POST: api.magicLogin.bind(api) })
   router.set(routePrefix + '/public-key', { GET: api.publicKey.bind(api) })
+
+  if (shouldGoogle) {
+    router.set(routePrefix + '/google', { GET: api.googleAuth.bind(api) })
+    router.set(routePrefix + '/google/callback', { GET: api.googleCallback.bind(api) })
+  }
 
   function handler (req, res, next) {
     Corsify(

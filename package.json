@@ -4,6 +4,7 @@
   "description": "This is the server component of Authentic. This provides endpoints for signup, login, confirm, and password change.",
   "main": "index.js",
   "scripts": {
+    "start": "node example/index.js",
     "test": "node test/index.js && standard"
   },
   "keywords": [
@@ -17,6 +18,7 @@
     "body": "^5.1.0",
     "corsify": "^2.1.0",
     "dg-level-userdb": "^2.0.0",
+    "google-auth-library": "^9.11.0",
     "http-hash-router": "^1.1.0",
     "jsonwebtoken": "^5.4.1",
     "level": "^7.0.1"
