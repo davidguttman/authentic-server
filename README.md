@@ -19,7 +19,11 @@ var auth = Authentic({
     // emailOpts.email is where to send the email
     // see API docs for more properties like confirmToken and changeToken
     setImmediate(cb)
-  }
+  },
+  // use below if you want Google sign-in
+  googleClientId,
+  googleClientSecret,
+  googleRedirectUrl
 })
 
 var server = http.createServer(auth)
@@ -286,6 +290,16 @@ Responds with the server's public key. This is what allows your other services t
     }
 }
 ```
+
+### GET `/auth/google?redirectUrl=&redirectParam=jwt`
+
+Redirects to the Google sign in screen. Requires `googleClientId`, `googleSecret`, and `googleRedirectUrl` to be set.
+
+Accepts a redirectUrl query parameter. This is *not* the same thing as the `googleRedirectUrl` which is not dynamic and must be whitelisted in your Google Console config. This query parameter is where `authentic-server` will redirect the user after all the Google auth is finished and creates an *authentic* JWT. `authentic-server` will redirect the user back to this url and append the JWT for use in the client application.
+
+An example of how this works in practice is that you would have a web app that wants to authenticate a user. If the web app's domain is `webapp.com`, the web app creates a "Sign In With Google" button and it will link to `authentic-server.com/auth/google?redirectUrl=https%3A%2F%2Fwebapp.com%2F%23%2Fauth%2Fjwt` (`redirectUrl` is `https://webapp.com/#/auth/jwt`). 
+
+The user clicks that link and goes to `authentic-server`. `authentic-server` redirects the user to Google to sign in. Google redirects the user back to `authentic-server` with the Google code. `authentic-server` uses the Google code to get a Google token. `authentic-server` uses the Google token to get the user's email. `authentic-server` creates a JWT with their email. _Finally_ `authentic-server` redirects the user back to `https://webapp.com/?jwt=eyJhbG...#/auth/jwt` (the `redirectUrl` with `jwt` query parameter specified by `redirectParam` ).
 
 # License #
 

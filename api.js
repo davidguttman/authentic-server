@@ -1,5 +1,6 @@
 var URL = require('url')
 var jsonBody = require('body/json')
+const { OAuth2Client } = require('google-auth-library')
 
 var Tokens = require('./tokens')
 var Users = require('./users')
@@ -24,6 +25,19 @@ var API = (module.exports = function (opts) {
   this.sendEmail = opts.sendEmail
   this.Tokens = Tokens(opts)
   this.Users = Users(opts.db)
+
+  var googleClientId = opts.googleClientId
+  var googleClientSecret = opts.googleClientSecret
+  var googleRedirectUrl = opts.googleRedirectUrl
+  var shouldGoogle = googleClientId && googleClientSecret && googleRedirectUrl
+
+  if (shouldGoogle) {
+    this.googleClient = new OAuth2Client(
+      googleClientId,
+      googleClientSecret,
+      googleRedirectUrl
+    )
+  }
 
   return this
 })
@@ -320,6 +334,63 @@ API.prototype.magicLogin = function (req, res, opts, cb) {
   })
 }
 
+API.prototype.googleAuth = function (req, res, opts, cb) {
+  var reqUrl = URL.parse(req.url, true)
+
+  var redirectUrl = reqUrl.query.redirectUrl
+  var redirectParam = reqUrl.query.redirectParam || 'jwt'
+
+  if (!redirectUrl) {
+    return cb(new Error('redirectUrl is required'))
+  }
+
+  var scopes = ['https://www.googleapis.com/auth/userinfo.email']
+
+  var authUrl = this.googleClient.generateAuthUrl({
+    access_type: 'offline',
+    scope: scopes
+  })
+
+  res.writeHead(302, {
+    Location: authUrl,
+    'Set-Cookie': [
+      `redirectUrl=${redirectUrl}; Path=/; HttpOnly; SameSite=Lax`,
+      `redirectParam=${redirectParam}; Path=/; HttpOnly; SameSite=Lax`
+    ]
+  })
+
+  res.end()
+}
+
+API.prototype.googleCallback = function (req, res, opts, cb) {
+  const googleClient = this.googleClient
+  const cookies = parseCookies(req)
+  const redirectUrl = cookies.redirectUrl
+  const redirectParam = cookies.redirectParam
+
+  var reqUrl = URL.parse(req.url, true)
+  var { code } = reqUrl.query
+  googleClient
+    .getToken(code)
+    .catch(cb)
+    .then(({ tokens }) => {
+      googleClient.setCredentials({ tokens })
+      googleClient
+        .getTokenInfo(tokens.access_token)
+        .catch(cb)
+        .then(userInfo => {
+          var authToken = this.Tokens.encode(userInfo.email)
+
+          const destUrl = URL.parse(redirectUrl, true)
+          destUrl.query[redirectParam] = authToken
+          const destinationUrl = URL.format(destUrl)
+
+          res.writeHead(302, { Location: destinationUrl })
+          res.end()
+        })
+    })
+}
+
 function parseBody (req, res, cb) {
   jsonBody(req, res, function (err, parsed) {
     if (typeof (parsed || {}).email === 'string') {
@@ -327,4 +398,18 @@ function parseBody (req, res, cb) {
     }
     cb(err, parsed)
   })
+}
+
+function parseCookies (request) {
+  const list = {}
+  const cookieHeader = request.headers.cookie
+
+  if (cookieHeader) {
+    cookieHeader.split(';').forEach(cookie => {
+      const parts = cookie.split('=')
+      list[parts.shift().trim()] = decodeURI(parts.join('='))
+    })
+  }
+
+  return list
 }
