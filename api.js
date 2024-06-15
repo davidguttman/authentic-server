@@ -348,6 +348,7 @@ API.prototype.googleAuth = function (req, res, opts, cb) {
 
   var authUrl = this.googleClient.generateAuthUrl({
     access_type: 'offline',
+    prompt: 'select_account',
     scope: scopes
   })
 
