@@ -327,27 +327,21 @@ function googleAuth (req, res, opts, cb) {
   const authUrl = this.googleClient.generateAuthUrl({
     access_type: 'offline',
     prompt: 'select_account',
+    state: JSON.stringify({ redirectUrl, redirectParam }),
     scope: scopes
   })
 
-  res.writeHead(302, {
-    Location: authUrl,
-    'Set-Cookie': [
-      `redirectUrl=${redirectUrl}; Path=/; HttpOnly; SameSite=Lax`,
-      `redirectParam=${redirectParam}; Path=/; HttpOnly; SameSite=Lax`
-    ]
-  })
-
+  res.writeHead(302, { Location: authUrl })
   res.end()
 }
 
 function googleCallback (req, res, opts, cb) {
   const googleClient = this.googleClient
-  const cookies = parseCookies(req)
-  const { redirectUrl, redirectParam } = cookies
-
   const reqUrl = URL.parse(req.url, true)
-  const { code } = reqUrl.query
+  const { code, state } = reqUrl.query
+
+  const { redirectUrl, redirectParam } = JSON.parse(state)
+
   googleClient
     .getToken(code)
     .catch(cb)
@@ -376,18 +370,4 @@ function parseBody (req, res, cb) {
     }
     cb(err, parsed)
   })
-}
-
-function parseCookies (request) {
-  const list = {}
-  const cookieHeader = request.headers.cookie
-
-  if (cookieHeader) {
-    cookieHeader.split(';').forEach(cookie => {
-      const parts = cookie.split('=')
-      list[parts.shift().trim()] = decodeURI(parts.join('='))
-    })
-  }
-
-  return list
 }

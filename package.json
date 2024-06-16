@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "bl": "^1.0.0",
+    "dotenv": "^16.4.5",
     "servertest": "^1.2.1",
     "standard": "^17.1.0",
     "tape": "^4.2.2"

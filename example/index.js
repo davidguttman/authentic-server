@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const fs = require('fs')
 const path = require('path')
 const http = require('http')
@@ -10,7 +12,10 @@ const auth = Authentic({
   sendEmail: (email, cb) => {
     console.log(email)
     setImmediate(cb)
-  }
+  },
+  googleClientId: process.env.GOOGLE_CLIENT_ID,
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  googleRedirectUrl: process.env.GOOGLE_REDIRECT_URL
 })
 
 const server = http.createServer((req, res) => {
@@ -22,5 +27,5 @@ const server = http.createServer((req, res) => {
   }
 })
 
-server.listen(1337)
-console.log('Authentic enabled server listening on port', 1337)
+server.listen(3000)
+console.log('Authentic enabled server listening on port', 3000)
