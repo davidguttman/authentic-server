@@ -1,5 +1,6 @@
 const jsonBody = require('body/json')
 const URL = require('@dguttman/node-url')
+const jwt = require('jsonwebtoken')
 const { OAuth2Client } = require('google-auth-library')
 
 const Tokens = require('./tokens')
@@ -346,20 +347,15 @@ function googleCallback (req, res, opts, cb) {
     .getToken(code)
     .catch(cb)
     .then(({ tokens }) => {
-      googleClient.setCredentials({ tokens })
-      googleClient
-        .getTokenInfo(tokens.access_token)
-        .catch(cb)
-        .then(userInfo => {
-          const authToken = this.Tokens.encode(userInfo.email)
+      const userInfo = jwt.decode(tokens.id_token)
+      const authToken = this.Tokens.encode(userInfo.email)
 
-          const destUrl = URL.parse(redirectUrl, true)
-          destUrl.query[redirectParam] = authToken
-          const destinationUrl = URL.format(destUrl)
+      const parsedRedirectUrl = URL.parse(redirectUrl, true)
+      parsedRedirectUrl.query[redirectParam] = authToken
+      const destination = URL.format(parsedRedirectUrl)
 
-          res.writeHead(302, { Location: destinationUrl })
-          res.end()
-        })
+      res.writeHead(302, { Location: destination })
+      res.end()
     })
 }
 
