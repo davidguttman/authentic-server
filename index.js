@@ -1,36 +1,39 @@
-var Corsify = require('corsify')
-var HttpHashRouter = require('http-hash-router')
+const Corsify = require('corsify')
+const HttpHashRouter = require('http-hash-router')
 
-var API = require('./api')
+const API = require('./api')
 
 module.exports = function (opts) {
   checkInitErrors(opts)
 
-  var routePrefix = opts.routePrefix || '/auth'
+  const routePrefix = opts.routePrefix || '/auth'
 
-  var shouldGoogle = opts.googleClientId && opts.googleClientSecret && opts.googleRedirectUrl
+  const shouldGoogle =
+    opts.googleClientId && opts.googleClientSecret && opts.googleRedirectUrl
 
-  var api = API(opts)
+  const api = API(opts)
 
-  var router = HttpHashRouter()
-  router.set(routePrefix + '/login', { POST: api.login.bind(api) })
-  router.set(routePrefix + '/signup', { POST: api.signup.bind(api) })
-  router.set(routePrefix + '/confirm', { POST: api.confirm.bind(api) })
-  router.set(routePrefix + '/change-password-request', {
+  const router = HttpHashRouter()
+  router.set(`${routePrefix}/login`, { POST: api.login.bind(api) })
+  router.set(`${routePrefix}/signup`, { POST: api.signup.bind(api) })
+  router.set(`${routePrefix}/confirm`, { POST: api.confirm.bind(api) })
+  router.set(`${routePrefix}/change-password-request`, {
     POST: api.changePasswordRequest.bind(api)
   })
-  router.set(routePrefix + '/change-password', {
+  router.set(`${routePrefix}/change-password`, {
     POST: api.changePassword.bind(api)
   })
-  router.set(routePrefix + '/magic-request', {
+  router.set(`${routePrefix}/magic-request`, {
     POST: api.magicRequest.bind(api)
   })
-  router.set(routePrefix + '/magic-login', { POST: api.magicLogin.bind(api) })
-  router.set(routePrefix + '/public-key', { GET: api.publicKey.bind(api) })
+  router.set(`${routePrefix}/magic-login`, { POST: api.magicLogin.bind(api) })
+  router.set(`${routePrefix}/public-key`, { GET: api.publicKey.bind(api) })
 
   if (shouldGoogle) {
-    router.set(routePrefix + '/google', { GET: api.googleAuth.bind(api) })
-    router.set(routePrefix + '/google/callback', { GET: api.googleCallback.bind(api) })
+    router.set(`${routePrefix}/google`, { GET: api.googleAuth.bind(api) })
+    router.set(`${routePrefix}/google/callback`, {
+      GET: api.googleCallback.bind(api)
+    })
   }
 
   function handler (req, res, next) {

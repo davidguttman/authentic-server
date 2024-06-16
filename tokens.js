@@ -1,6 +1,8 @@
-var jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken')
 
-var Tokens = (module.exports = function (opts) {
+module.exports = Tokens
+
+function Tokens (opts) {
   if (!(this instanceof Tokens)) return new Tokens(opts)
 
   this.publicKey = opts.publicKey.toString()
@@ -8,11 +10,11 @@ var Tokens = (module.exports = function (opts) {
   this.expiresIn = opts.expiresIn || '30d'
 
   return this
-})
+}
 
 Tokens.prototype.encode = function (email) {
-  var payload = { email: email }
-  var token = jwt.sign(payload, this.privateKey, {
+  const payload = { email }
+  const token = jwt.sign(payload, this.privateKey, {
     algorithm: 'RS256',
     expiresIn: this.expiresIn
   })

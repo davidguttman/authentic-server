@@ -1,18 +1,19 @@
-var fs = require('fs')
-var http = require('http')
-var Authentic = require('../')
+const fs = require('fs')
+const path = require('path')
+const http = require('http')
+const Authentic = require('../')
 
-var auth = Authentic({
-  db: __dirname + '/../db/',
-  publicKey: fs.readFileSync(__dirname + '/rsa-public.pem'),
-  privateKey: fs.readFileSync(__dirname + '/rsa-private.pem'),
-  sendEmail: function (email, cb) {
+const auth = Authentic({
+  db: path.join(__dirname, '/../db/'),
+  publicKey: fs.readFileSync(path.join(__dirname, '/rsa-public.pem')),
+  privateKey: fs.readFileSync(path.join(__dirname, '/rsa-private.pem')),
+  sendEmail: (email, cb) => {
     console.log(email)
     setImmediate(cb)
   }
 })
 
-var server = http.createServer(function (req, res) {
+const server = http.createServer((req, res) => {
   auth(req, res, next)
 
   function next (req, res) {
