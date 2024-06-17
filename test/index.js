@@ -2,12 +2,14 @@ const fs = require('fs')
 const http = require('http')
 const path = require('path')
 const tape = require('tape')
-const servertest = require('servertest')
+const servertest = require('dg-servertest')
 
 const Authentic = require('../')
 
-const db = require('./fake-db')
-const Users = require('../users')(db)
+const dbUsers = require('./fake-db')('users')
+const dbExpiry = require('./fake-db')('expiry')
+
+const Users = require('../users')(dbUsers)
 
 const publicKey = fs.readFileSync(path.join(__dirname, 'rsa-public.pem'))
 const privateKey = fs.readFileSync(path.join(__dirname, 'rsa-private.pem'))
@@ -20,7 +22,8 @@ const Tokens = require('../tokens')({
 let lastEmail
 
 const auth = Authentic({
-  db,
+  dbUsers,
+  dbExpiry,
   publicKey,
   privateKey,
   sendEmail: (email, cb) => {
@@ -605,6 +608,79 @@ tape('Auth: Magic Login: should fail with invalid magic token', t => {
   })
 })
 
+tape('Auth: Password Change Tracking', t => {
+  // Step 1: Create a user
+  const userData = {
+    email: 'pwchange@example.com',
+    password: 'initialPassword',
+    confirmUrl: 'http://example.com/confirm'
+  }
+  post('/auth/signup', userData, (err, res) => {
+    t.error(err, 'No error on signup')
+    t.equal(res.statusCode, 201, 'User created')
+
+    // Step 2: Retrieve the confirmation token
+    Users.findUser(userData.email, (err, user) => {
+      t.ifError(err, 'should not error')
+
+      const confirmData = {
+        email: userData.email,
+        confirmToken: user.data.confirmToken
+      }
+
+      // Step 3: Confirm the user
+      post('/auth/confirm', confirmData, (err, res) => {
+        t.error(err, 'No error on confirmation')
+        t.equal(res.statusCode, 202, 'User confirmed')
+
+        // Step 4: Check that the user is not in the recent changes list
+        get('/auth/expired', (err, res) => {
+          t.error(err, 'No error fetching password changes')
+          const data = JSON.parse(res.body)
+          const hash = Users.hashEmail(userData.email)
+          t.equal(data[hash], undefined, 'User should not be in the list initially')
+
+          // Step 5: Request a password change
+          const changeRequestData = {
+            email: userData.email,
+            changeUrl: 'http://example.com/change-password'
+          }
+          post('/auth/change-password-request', changeRequestData, (err, res) => {
+            t.error(err, 'No error on change password request')
+            t.equal(res.statusCode, 200, 'Change password request received')
+
+            // Step 6: Retrieve the change token
+            Users.findUser(userData.email, (err, user) => {
+              t.ifError(err, 'should not error')
+
+              const updateData = {
+                email: userData.email,
+                password: 'newPassword',
+                changeToken: user.data.changeToken
+              }
+
+              // Step 7: Change the user's password
+              post('/auth/change-password', updateData, (err, res) => {
+                t.error(err, 'No error on password change')
+                t.equal(res.statusCode, 200, 'Password changed')
+
+                // Step 8: Check that the user is now in the recent changes list
+                get('/auth/expired', (err, res) => {
+                  t.error(err, 'No error fetching password changes after update')
+                  const data = JSON.parse(res.body)
+                  t.ok(data[hash], 'User should be in the list after password change')
+
+                  t.end()
+                })
+              })
+            })
+          })
+        })
+      })
+    })
+  })
+})
+
 function post (url, data, cb) {
   const opts = {
     method: 'POST',
@@ -612,6 +688,11 @@ function post (url, data, cb) {
   }
 
   servertest(createServer(auth), url, opts, cb).end(JSON.stringify(data))
+}
+
+function get (url, callback) {
+  const opts = { method: 'GET' }
+  servertest(createServer(auth), url, opts, callback)
 }
 
 function createServer (auth) {

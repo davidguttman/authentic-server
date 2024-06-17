@@ -5,12 +5,13 @@ This is the server component of [authentic](https://github.com/davidguttman/auth
 ## Example ##
 
 ```js
-var fs = require('fs')
-var http = require('http')
-var Authentic = require('authentic-server')
+const fs = require('fs')
+const http = require('http')
+const Authentic = require('authentic-server')
 
-var auth = Authentic({
-  db: __dirname + '/users/',
+const auth = Authentic({
+  dbUsers: __dirname + '/users/',
+  dbExpiry: __dirname + '/expiry',
   publicKey: fs.readFileSync(__dirname + '/rsa-public.pem'),
   privateKey: fs.readFileSync(__dirname + '/rsa-private.pem'),
   sendEmail: function (emailOpts, cb) {
@@ -26,7 +27,7 @@ var auth = Authentic({
   googleRedirectUrl
 })
 
-var server = http.createServer(auth)
+const server = http.createServer(auth)
 
 server.listen(1337)
 console.log('Authentic enabled server listening on port', 1337)
@@ -46,8 +47,9 @@ npm install --save authentic-server
 This is the main entry point. Accepts an options object and returns a handler function.
 
 ```js
-var auth = Authentic({
-  db: __dirname + '/users/',
+const auth = Authentic({
+  dbUsers: __dirname + '/users/',
+  dbExpiry: __dirname + '/expiry/',
   privateKey: fs.readFileSync(__dirname + '/rsa-private.pem'),
   publicKey: fs.readFileSync(__dirname + '/rsa-public.pem'),
   sendEmail: function (emailOpts, done) {
@@ -57,7 +59,7 @@ var auth = Authentic({
 })
 
 // auth is now a function that accepts req, res, and optional next arguments
-var server = http.createServer(function(req, res, next){
+const server = http.createServer(function(req, res, next){
   auth(req, res, next)
 
   function next (req, res) {
@@ -68,18 +70,22 @@ var server = http.createServer(function(req, res, next){
 })
 
 // or simply
-var server = http.createServer(auth)
+const server = http.createServer(auth)
 ```
 
 #### options ####
 
 `Authentic()` takes an options object as its first argument, several of them are required:
 
-* `db`: any of the following:
+* `dbUsers`: any of the following:
   * a string location of where to open (or create if it doesn't exist) a [levelDB](https://github.com/level/level) on disk
   * an object that has `get` and `put` methods that follow this form (see [test/fake-db.js](https://github.com/davidguttman/authentic-server/blob/master/test/fake-db.js) for an example):
     * `get: function (key, cb) { ... }`
     * `put: function (key, value, cb) { ... }`
+  * a `levelDB` compatible db instance (e.g. [multileveldown](https://github.com/mafintosh/multileveldown) or [levelup](https://github.com/level/levelup) + [sqldown](https://github.com/calvinmetcalf/sqldown), [dynamodown](https://github.com/davidguttman/dynamodown), [redisdown](https://github.com/hmalphettes/redisdown), etc... )
+* `dbExpiry`: any of the following:
+  * a string location of where to open (or create if it doesn't exist) a [levelDB](https://github.com/level/level) on disk
+  * an object that has `put` and `createReadStream` methods that follow this form (see [test/fake-db.js](https://github.com/davidguttman/authentic-server/blob/master/test/fake-db.js) for an example)
   * a `levelDB` compatible db instance (e.g. [multileveldown](https://github.com/mafintosh/multileveldown) or [levelup](https://github.com/level/levelup) + [sqldown](https://github.com/calvinmetcalf/sqldown), [dynamodown](https://github.com/davidguttman/dynamodown), [redisdown](https://github.com/hmalphettes/redisdown), etc... )
 * `privateKey`: RSA private key in PEM format. Can be created with the command: `openssl genrsa 4096 > rsa-private.pem`
 * `publicKey`: RSA public key in PEM format. Can be created with the command: `openssl rsa -in rsa-private.pem -pubout > rsa-public.pem`
@@ -300,6 +306,25 @@ Accepts a redirectUrl query parameter. This is *not* the same thing as the `goog
 An example of how this works in practice is that you would have a web app that wants to authenticate a user. If the web app's domain is `webapp.com`, the web app creates a "Sign In With Google" button and it will link to `authentic-server.com/auth/google?redirectUrl=https%3A%2F%2Fwebapp.com%2F%23%2Fauth%2Fjwt` (`redirectUrl` is `https://webapp.com/#/auth/jwt`). 
 
 The user clicks that link and goes to `authentic-server`. `authentic-server` redirects the user to Google to sign in. Google redirects the user back to `authentic-server` with the Google code. `authentic-server` uses the Google code to get a Google token. `authentic-server` uses the Google token to get the user's email. `authentic-server` creates a JWT with their email. _Finally_ `authentic-server` redirects the user back to `https://webapp.com/?jwt=eyJhbG...#/auth/jwt` (the `redirectUrl` with `jwt` query parameter specified by `redirectParam` ).
+
+### GET `/auth/expired`
+
+Returns an object of email hashes and expiration time pairs. Services can use this to deny access to any token that has been issued before the expiration time. Example:
+
+```js
+{
+  '733e02770582a9c8898ddf61cfc1b0a0128f9105e8e17dc1d24e7623158014ef': 1718648699,
+  '4a681d808e8868e50f9aee342083a98a5343e451e5caa611d9324293656b6a0a': 1718648700
+}
+```
+
+Email hashes are `sha256`. For example:
+
+```js
+  email = 'pwchange@example.com'
+  require('crypto').createHash('sha256').update(email).digest('hex')
+  // '4a681d808e8868e50f9aee342083a98a5343e451e5caa611d9324293656b6a0a'
+```
 
 # License #
 

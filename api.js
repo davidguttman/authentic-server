@@ -5,6 +5,7 @@ const { OAuth2Client } = require('google-auth-library')
 
 const Tokens = require('./tokens')
 const Users = require('./users')
+const Expiry = require('./expiry')
 
 const clientErrors = {
   'User Exists': 400,
@@ -32,13 +33,15 @@ API.prototype.magicRequest = magicRequest
 API.prototype.magicLogin = magicLogin
 API.prototype.googleAuth = googleAuth
 API.prototype.googleCallback = googleCallback
+API.prototype.expired = expired
 
 function API (opts) {
   if (!(this instanceof API)) return new API(opts)
 
   this.sendEmail = opts.sendEmail
   this.Tokens = Tokens(opts)
-  this.Users = Users(opts.db)
+  this.Users = Users(opts.dbUsers)
+  this.Expiry = opts.dbExpiry ? Expiry(opts.dbExpiry) : null
 
   const { googleClientId, googleClientSecret, googleRedirectUrl } = opts
   const shouldGoogle = googleClientId && googleClientSecret && googleRedirectUrl
@@ -229,6 +232,12 @@ function changePassword (req, res, opts, cb) {
         if (err) return cb(err)
 
         const authToken = this.Tokens.encode(email)
+        const hash = this.Users.hashEmail(email)
+        if (this.Expiry) {
+          this.Expiry.set(hash, (err, data) => {
+            if (err) return cb(err)
+          })
+        }
 
         res.writeHead(200, { 'Content-Type': 'application/json' })
         res.end(
@@ -357,6 +366,16 @@ function googleCallback (req, res, opts, cb) {
       res.writeHead(302, { Location: destination })
       res.end()
     })
+}
+
+function expired (req, res, opts, cb) {
+  const oneMonth = 30 * 24 * 60 * 60 * 1000
+  const since = new Date(Date.now() - oneMonth)
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  this.Expiry.getSince(since.toISOString(), (err, list) => {
+    if (err) return cb(err)
+    res.end(JSON.stringify(list))
+  })
 }
 
 function parseBody (req, res, cb) {

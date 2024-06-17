@@ -264,6 +264,10 @@ Users.prototype.checkMagicToken = function (email, token, cb) {
   })
 }
 
+Users.prototype.hashEmail = function (email) {
+  return crypto.createHash('sha256').update(email).digest('hex')
+}
+
 function generateToken (len, encoding, cb) {
   len = len || 1
   if (typeof encoding === 'function') {
