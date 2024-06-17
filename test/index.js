@@ -3,13 +3,13 @@ const http = require('http')
 const path = require('path')
 const tape = require('tape')
 const servertest = require('dg-servertest')
+const { MemoryLevel } = require('memory-level')
 
 const Authentic = require('../')
 
-const dbUsers = require('./fake-db')('users')
-const dbExpiry = require('./fake-db')('expiry')
+const db = new MemoryLevel({ valueEncoding: 'json' })
 
-const Users = require('../users')(dbUsers)
+const Users = require('../users')(db)
 
 const publicKey = fs.readFileSync(path.join(__dirname, 'rsa-public.pem'))
 const privateKey = fs.readFileSync(path.join(__dirname, 'rsa-private.pem'))
@@ -22,8 +22,8 @@ const Tokens = require('../tokens')({
 let lastEmail
 
 const auth = Authentic({
-  dbUsers,
-  dbExpiry,
+  dbUsers: db,
+  dbExpiry: db,
   publicKey,
   privateKey,
   sendEmail: (email, cb) => {

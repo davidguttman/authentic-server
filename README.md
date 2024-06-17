@@ -76,17 +76,16 @@ const server = http.createServer(auth)
 #### options ####
 
 `Authentic()` takes an options object as its first argument, several of them are required:
-
 * `dbUsers`: any of the following:
   * a string location of where to open (or create if it doesn't exist) a [levelDB](https://github.com/level/level) on disk
-  * an object that has `get` and `put` methods that follow this form (see [test/fake-db.js](https://github.com/davidguttman/authentic-server/blob/master/test/fake-db.js) for an example):
+  * a `levelDB` compatible db instance (e.g. supports the [abstract-level](https://github.com/Level/abstract-level) interface)
+  * an object that has `get` and `put` methods that follow this form (see [example/custom-db.js](https://github.com/davidguttman/authentic-server/blob/master/example/custom-db.js) for an example):
     * `get: function (key, cb) { ... }`
     * `put: function (key, value, cb) { ... }`
-  * a `levelDB` compatible db instance (e.g. [multileveldown](https://github.com/mafintosh/multileveldown) or [levelup](https://github.com/level/levelup) + [sqldown](https://github.com/calvinmetcalf/sqldown), [dynamodown](https://github.com/davidguttman/dynamodown), [redisdown](https://github.com/hmalphettes/redisdown), etc... )
-* `dbExpiry`: any of the following:
+* `dbExpiry`: Optional, use only if you want the `/auth/expired` endpoint. One of the following
   * a string location of where to open (or create if it doesn't exist) a [levelDB](https://github.com/level/level) on disk
-  * an object that has `put` and `createReadStream` methods that follow this form (see [test/fake-db.js](https://github.com/davidguttman/authentic-server/blob/master/test/fake-db.js) for an example)
-  * a `levelDB` compatible db instance (e.g. [multileveldown](https://github.com/mafintosh/multileveldown) or [levelup](https://github.com/level/levelup) + [sqldown](https://github.com/calvinmetcalf/sqldown), [dynamodown](https://github.com/davidguttman/dynamodown), [redisdown](https://github.com/hmalphettes/redisdown), etc... )
+  * a `levelDB` compatible db instance (e.g. supports the [abstract-level]
+  * a custom object with `put` and `iterator` functions that behave like `abstract-level` (not recommended)
 * `privateKey`: RSA private key in PEM format. Can be created with the command: `openssl genrsa 4096 > rsa-private.pem`
 * `publicKey`: RSA public key in PEM format. Can be created with the command: `openssl rsa -in rsa-private.pem -pubout > rsa-public.pem`
 * `sendEmail(emailOpts, done)`: please provide function that sends email how you'd like. Use the provided `emailOpts` to craft an email, send it, and call `done(err)` when finished.

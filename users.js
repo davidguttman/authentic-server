@@ -1,6 +1,6 @@
 const crypto = require('crypto')
 const ulevel = require('dg-level-userdb')
-const level = require('level')
+const { Level } = require('level')
 
 module.exports = Users
 
@@ -16,7 +16,7 @@ function Users (db) {
 Users.prototype.adaptDB = function (dbObj) {
   return {
     get: (keys, cb) => {
-      const key = keys.split('user:')[1]
+      const key = isLevelDB(dbObj) ? keys : keys.split('user:')[1]
       dbObj.get(key, (err, val) => {
         if (err) return cb(err)
         if (val === undefined) {
@@ -28,7 +28,7 @@ Users.prototype.adaptDB = function (dbObj) {
       })
     },
     put: (keys, val, cb) => {
-      const key = keys.split('user:')[1]
+      const key = isLevelDB(dbObj) ? keys : keys.split('user:')[1]
       dbObj.put(key, val, cb)
     }
   }
@@ -292,5 +292,9 @@ function validPassword (password) {
 }
 
 function createLevelDB (location) {
-  return level(location, { valueEncoding: 'json' })
+  return new Level(location, { valueEncoding: 'json' })
+}
+
+function isLevelDB (db) {
+  return db && db.constructor && /Level/.test(db.constructor.name)
 }

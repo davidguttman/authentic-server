@@ -1,4 +1,4 @@
-const level = require('level')
+const { Level } = require('level')
 
 module.exports = Expiry
 
@@ -23,15 +23,29 @@ Expiry.prototype.getSince = function (date, cb) {
   const list = {}
   const iso = new Date(date).toISOString()
   const key = `expiry:${iso}:`
-  this.db
-    .createReadStream({ gte: key, lt: 'expiry:~' })
-    .on('error', cb)
-    .on('data', data => {
-      list[data.value.hash] = data.value.ts
+  const iterator = this.db.iterator({
+    gte: key,
+    lt: 'expiry:~'
+  })
+
+  const iterate = () => {
+    iterator.next((err, key, value) => {
+      if (err) return cb(err)
+      if (key && value) {
+        list[value.hash] = value.ts
+        iterate() // Recursively fetch next item
+      } else {
+        iterator.close((err) => {
+          if (err) return cb(err)
+          cb(null, list) // End of iteration
+        })
+      }
     })
-    .on('end', () => cb(null, list))
+  }
+
+  iterate() // Start iteration
 }
 
 function createLevelDB (location) {
-  return level(location, { valueEncoding: 'json' })
+  return new Level(location, { valueEncoding: 'json' })
 }

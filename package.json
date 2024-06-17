@@ -22,12 +22,13 @@
     "google-auth-library": "^9.11.0",
     "http-hash-router": "^1.1.0",
     "jsonwebtoken": "^5.4.1",
-    "level": "^7.0.1"
+    "level": "^8.0.1"
   },
   "devDependencies": {
     "bl": "^1.0.0",
     "dg-servertest": "^1.2.2",
     "dotenv": "^16.4.5",
+    "memory-level": "^1.0.0",
     "standard": "^17.1.0",
     "tape": "^4.2.2"
   },
