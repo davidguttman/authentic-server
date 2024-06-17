@@ -4,6 +4,7 @@ const HttpHashRouter = require('http-hash-router')
 const API = require('./api')
 
 module.exports = function (opts) {
+  opts.dbUsers = opts.dbUsers || opts.db
   checkInitErrors(opts)
 
   const routePrefix = opts.routePrefix || '/auth'
@@ -36,6 +37,10 @@ module.exports = function (opts) {
     })
   }
 
+  if (opts.dbExpiry) {
+    router.set(`${routePrefix}/expired`, { GET: api.expired.bind(api) })
+  }
+
   function handler (req, res, next) {
     Corsify(
       {
@@ -66,9 +71,9 @@ module.exports = function (opts) {
 }
 
 function checkInitErrors (opts) {
-  if (!opts.db) {
+  if (!opts.dbUsers) {
     throw new Error(
-      'Authentic: no db given, must have "get" and "put" methods.'
+      'Authentic: no user db given, must have "get" and "put" methods.'
     )
   }
 
