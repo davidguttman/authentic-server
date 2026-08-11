@@ -350,13 +350,30 @@ function googleCallback (req, res, opts, cb) {
   const reqUrl = URL.parse(req.url, true)
   const { code, state } = reqUrl.query
 
-  const { redirectUrl, redirectParam } = JSON.parse(state)
+  if (!code) return cb(badRequest('code is required'))
+  if (!state) return cb(badRequest('state is required'))
+
+  let callbackState
+  try {
+    callbackState = JSON.parse(state)
+  } catch (err) {
+    return cb(badRequest('state must be valid JSON'))
+  }
+
+  const { redirectUrl, redirectParam = 'jwt' } = callbackState
+  if (!redirectUrl) return cb(badRequest('redirectUrl is required'))
 
   googleClient
     .getToken(code)
-    .catch(cb)
     .then(({ tokens }) => {
-      const userInfo = jwt.decode(tokens.id_token)
+      const userInfo = tokens && tokens.id_token
+        ? jwt.decode(tokens.id_token)
+        : null
+
+      if (!userInfo || !userInfo.email) {
+        throw badRequest('Google token did not include an email')
+      }
+
       const authToken = this.Tokens.encode(userInfo.email)
 
       const parsedRedirectUrl = URL.parse(redirectUrl, true)
@@ -366,6 +383,16 @@ function googleCallback (req, res, opts, cb) {
       res.writeHead(302, { Location: destination })
       res.end()
     })
+    .catch(err => {
+      if (!err.statusCode) err.statusCode = 400
+      cb(err)
+    })
+}
+
+function badRequest (message) {
+  const err = new Error(message)
+  err.statusCode = 400
+  return err
 }
 
 function expired (req, res, opts, cb) {

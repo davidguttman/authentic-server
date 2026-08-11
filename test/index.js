@@ -32,6 +32,52 @@ const auth = Authentic({
   }
 })
 
+const googleAuth = Authentic({
+  dbUsers: db,
+  dbExpiry: db,
+  publicKey,
+  privateKey,
+  sendEmail: (email, cb) => setImmediate(cb),
+  googleClientId: 'test-client-id',
+  googleClientSecret: 'test-client-secret',
+  googleRedirectUrl: 'https://example.com/auth/google/callback'
+})
+
+tape('Auth: should reject malformed Google callback state', t => {
+  const url = '/auth/google/callback?code=test&state=%7Bbad'
+  const opts = { method: 'GET' }
+
+  servertest(createServer(googleAuth), url, opts, (err, res) => {
+    t.ifError(err, 'should not crash the server')
+    t.equal(res.statusCode, 400, 'should return a client error')
+
+    const data = JSON.parse(res.body)
+    t.equal(data.success, false, 'should not succeed')
+    t.equal(data.error, 'state must be valid JSON', 'should explain error')
+
+    t.end()
+  })
+})
+
+tape('Auth: should reject Google callback without a code', t => {
+  const state = encodeURIComponent(JSON.stringify({
+    redirectUrl: 'https://example.com/complete'
+  }))
+  const url = `/auth/google/callback?state=${state}`
+  const opts = { method: 'GET' }
+
+  servertest(createServer(googleAuth), url, opts, (err, res) => {
+    t.ifError(err, 'should not crash the server')
+    t.equal(res.statusCode, 400, 'should return a client error')
+
+    const data = JSON.parse(res.body)
+    t.equal(data.success, false, 'should not succeed')
+    t.equal(data.error, 'code is required', 'should explain error')
+
+    t.end()
+  })
+})
+
 tape('Auth: should get public-key', t => {
   const url = '/auth/public-key'
   const opts = { method: 'GET' }
